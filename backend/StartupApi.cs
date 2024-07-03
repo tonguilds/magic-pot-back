@@ -3,7 +3,6 @@
     using System.Reflection;
     using System.Text.Json.Serialization;
     using MagicPot.Backend.Services;
-    using Microsoft.AspNetCore.Mvc;
     using Microsoft.OpenApi.Models;
     using RecurrentTasks;
 
@@ -30,6 +29,8 @@
 
             services.AddSingleton<CachedData>();
             services.AddTask<CachedData>(o => o.AutoStart(bo.CacheReloadInterval, TimeSpan.FromSeconds(1)));
+
+            services.AddTask<IndexerControlTask>(o => o.AutoStart(IndexerControlTask.Interval, TimeSpan.FromSeconds(5)), ServiceLifetime.Singleton);
 
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen(o =>
@@ -59,6 +60,7 @@
             RegisteredTasks =
                 [
                     typeof(ITask<CachedData>),
+                    typeof(ITask<IndexerControlTask>),
                 ];
         }
 

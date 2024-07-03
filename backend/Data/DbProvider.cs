@@ -29,6 +29,7 @@
         public void Migrate()
         {
             MainDb.CreateTable<Settings>();
+            MainDb.CreateTable<Jetton>();
             MainDb.CreateTable<Pool>();
 
             UpdateDb(MainDb);

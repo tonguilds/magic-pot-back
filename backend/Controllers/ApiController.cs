@@ -25,6 +25,7 @@
             return new BackendConfig
             {
                 InMainnet = cachedData.InMainnet,
+                KnownJettonCount = cachedData.KnownJettons.Count,
             };
         }
 
@@ -47,6 +48,8 @@
         public class BackendConfig
         {
             public required bool InMainnet { get; set; }
+
+            public required int KnownJettonCount { get; set; }
         }
     }
 }

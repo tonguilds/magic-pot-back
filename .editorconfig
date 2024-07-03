@@ -15,6 +15,9 @@ dotnet_diagnostic.SA1600.severity = silent
 # SA1615: ElementReturnValueMustBeDocumented
 dotnet_diagnostic.SA1615.severity = silent
 
+# SA1623: PropertySummaryDocumentationMustMatchAccessors
+dotnet_diagnostic.SA1623.severity = silent
+
 # SA1633: FileMustHaveHeader
 dotnet_diagnostic.SA1633.severity = none
 
