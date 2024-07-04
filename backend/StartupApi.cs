@@ -12,7 +12,10 @@
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddScoped<RobotsTxtMiddleware>();
+            services.AddSingleton<RobotsTxtMiddleware>();
+            services.AddSingleton<HealthMiddleware>();
+            services.AddSingleton<CachedDataUpdateMiddleware>();
+            services.AddSingleton<IndexerHealthUpdateMiddleware>();
 
             services
                 .AddControllers()
@@ -80,9 +83,9 @@
             }));
 
             app.UseMiddleware<RobotsTxtMiddleware>();
-            ////app.UseMiddleware<HealthMiddleware>();
-            ////app.UseMiddleware<SearchCacheUpdateMiddleware>();
-            ////app.UseMiddleware<IndexerHealthUpdateMiddleware>();
+            app.UseMiddleware<HealthMiddleware>();
+            app.UseMiddleware<CachedDataUpdateMiddleware>();
+            app.UseMiddleware<IndexerHealthUpdateMiddleware>();
 
             app.UseSwagger();
             app.UseSwaggerUI(o => o.SwaggerEndpoint("/swagger/backend/swagger.json", "Magic Pot API"));
