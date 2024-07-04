@@ -1,8 +1,6 @@
 ﻿namespace MagicPot.Backend
 {
-    using MagicPot.Backend.Services;
     using Microsoft.Extensions.Configuration;
-    using RecurrentTasks;
     using TonLibDotNet;
     using TonLibDotNet.Types;
 
@@ -31,13 +29,9 @@
             services.Configure<TonOptions>(o => o.Options.KeystoreType = new KeyStoreTypeDirectory(dir));
             services.AddSingleton<ITonClient, TonClient>();
 
-            services.AddHttpClient<TonApiService>();
-
-            services.AddTask<RunOnceTask>(o => o.AutoStart(RunOnceTask.Interval, TimeSpan.FromSeconds(3)));
-
             RegisteredTasks =
                 [
-                    typeof(ITask<RunOnceTask>),
+                    //typeof(ITask<RunOnceTask>),
                 ];
         }
     }

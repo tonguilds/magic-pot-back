@@ -11,16 +11,22 @@
 
         public async Task RunAsync(ITask currentTask, IServiceProvider scopeServiceProvider, CancellationToken cancellationToken)
         {
-            await PreloadJettons();
+            var haveChanges = await PreloadJettons();
 
             // Force to run only once.
             currentTask.Options.Interval = TimeSpan.Zero;
+
+            if (haveChanges)
+            {
+                scopeServiceProvider.GetRequiredService<ITask<CachedData>>().TryRunImmediately();
+            }
         }
 
-        public async Task PreloadJettons()
+        public async Task<bool> PreloadJettons()
         {
             var list = dbProvider.MainDb.Table<Jetton>().ToList();
             var count = 0;
+            var changed = false;
 
             foreach (var (name, address) in options.Value.WellKnownJettons)
             {
@@ -37,12 +43,15 @@
                     else
                     {
                         dbProvider.MainDb.Insert(existing);
+                        changed = true;
                         logger.LogInformation("New Jetton saved: {Symbol} {Address} ({Name})", existing.Symbol, existing.Address, existing.Name);
                     }
                 }
             }
 
             logger.LogDebug("Checked all {Count} well-known jettons", count);
+
+            return changed;
         }
     }
 }

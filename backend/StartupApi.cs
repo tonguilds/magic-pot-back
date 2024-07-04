@@ -32,6 +32,9 @@
 
             services.AddTask<IndexerControlTask>(o => o.AutoStart(IndexerControlTask.Interval, TimeSpan.FromSeconds(5)), ServiceLifetime.Singleton);
 
+            services.AddHttpClient<TonApiService>();
+            services.AddTask<RunOnceTask>(o => o.AutoStart(RunOnceTask.Interval, TimeSpan.FromSeconds(3)));
+
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen(o =>
             {
@@ -61,6 +64,7 @@
                 [
                     typeof(ITask<CachedData>),
                     typeof(ITask<IndexerControlTask>),
+                    typeof(ITask<RunOnceTask>),
                 ];
         }
 
