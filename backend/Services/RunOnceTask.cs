@@ -18,7 +18,7 @@
 
             if (haveChanges)
             {
-                scopeServiceProvider.GetRequiredService<ITask<CachedData>>().TryRunImmediately();
+                scopeServiceProvider.ReloadCachedData();
             }
         }
 

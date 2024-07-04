@@ -10,18 +10,24 @@
         public async Task<Jetton?> GetJettonInfo(string address)
         {
             await WaitIfNeeded();
-            var info = await httpClient.GetFromJsonAsync<JettonInfo>($"https://tonapi.io/v2/jettons/{address}");
-            if (info != null && info.metadata != null)
+
+            using var resp = await httpClient.GetAsync($"https://tonapi.io/v2/jettons/{address}");
+
+            if (resp.IsSuccessStatusCode)
             {
-                return new Jetton()
+                var info = await resp.Content.ReadFromJsonAsync<JettonInfo>();
+                if (info != null && info.metadata != null)
                 {
-                    Address = TonLibDotNet.Utils.AddressUtils.Instance.SetBounceable(address, true),
-                    Name = info.metadata.name,
-                    Symbol = info.metadata.symbol,
-                    Decimals = info.metadata.decimals,
-                    Image = info.metadata.image,
-                    Description = info.metadata.description,
-                };
+                    return new Jetton()
+                    {
+                        Address = TonLibDotNet.Utils.AddressUtils.Instance.SetBounceable(address, true),
+                        Name = info.metadata.name,
+                        Symbol = info.metadata.symbol,
+                        Decimals = info.metadata.decimals,
+                        Image = info.metadata.image,
+                        Description = info.metadata.description,
+                    };
+                }
             }
 
             return null;

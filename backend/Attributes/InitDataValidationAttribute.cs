@@ -18,15 +18,10 @@
 
         protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
         {
-            if (value == null)
-            {
-                return new ValidationResult("Not-null value required");
-            }
-
-            var initData = value.ToString();
+            var initData = value?.ToString();
             if (string.IsNullOrWhiteSpace(initData))
             {
-                return new ValidationResult("Not-empty value required");
+                return ValidationResult.Success;
             }
 
             var opt = validationContext.GetRequiredService<CachedData>();

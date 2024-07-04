@@ -4,6 +4,7 @@
     using System.Text.Json.Serialization;
     using MagicPot.Backend.Services;
     using Microsoft.OpenApi.Models;
+    using Polly;
     using RecurrentTasks;
 
     public class StartupApi(IConfiguration configuration)
@@ -19,6 +20,7 @@
 
             services
                 .AddControllers()
+                .ConfigureApiBehaviorOptions(o => o.SuppressModelStateInvalidFilter = true)
                 .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(System.Text.Json.JsonNamingPolicy.CamelCase, allowIntegerValues: false)));
 
             var optionsSection = configuration.GetSection("BackendOptions");
@@ -35,7 +37,9 @@
 
             services.AddTask<IndexerControlTask>(o => o.AutoStart(IndexerControlTask.Interval, TimeSpan.FromSeconds(5)), ServiceLifetime.Singleton);
 
-            services.AddHttpClient<TonApiService>();
+            services.AddHttpClient<TonApiService>()
+                .AddTransientHttpErrorPolicy(p => p.WaitAndRetryAsync(3, _ => TimeSpan.FromSeconds(1)));
+
             services.AddTask<RunOnceTask>(o => o.AutoStart(RunOnceTask.Interval, TimeSpan.FromSeconds(3)));
 
             services.AddEndpointsApiExplorer();
