@@ -143,23 +143,25 @@
                     if (task.FailsCount > 0)
                     {
                         allOk = false;
-                        yield return (task.Name, $"failed with {task.LastExceptionName}, last success {task.LastSuccessTime.UtcDateTime.ToString("u", CultureInfo.InvariantCulture)}");
+                        yield return (task.Name, $"failed with {task.LastExceptionName}, last success {task.LastSuccessTime:u}");
                     }
                     else
                     {
-                        yield return (task.Name, task.LastSuccessTime.UtcDateTime.ToString("u", CultureInfo.InvariantCulture));
+                        yield return (task.Name, task.LastSuccessTime.ToString("u"));
                     }
                 }
                 else
                 {
-                    if (task.LastSuccessTime.Add(task.Interval).Add(task.Interval) < DateTimeOffset.Now)
+                    // Wait twice default interval, but not less than 3 minutes.
+                    var allowed = Math.Max(task.Interval.TotalSeconds * 2, 60 * 3);
+                    if (task.LastSuccessTime.AddSeconds(allowed) < DateTimeOffset.Now)
                     {
                         allOk = false;
-                        yield return (task.Name, $"failed with {task.LastExceptionName}, last success {task.LastSuccessTime.UtcDateTime.ToString("u", CultureInfo.InvariantCulture)}");
+                        yield return (task.Name, $"failed with {task.LastExceptionName}, last success {task.LastSuccessTime:u}");
                     }
                     else
                     {
-                        yield return (task.Name, task.LastSuccessTime.UtcDateTime.ToString("u", CultureInfo.InvariantCulture));
+                        yield return (task.Name, task.LastSuccessTime.ToString("u"));
                     }
                 }
             }
