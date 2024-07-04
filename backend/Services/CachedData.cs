@@ -10,6 +10,8 @@
 
         public BackendOptions Options { get; private set; } = new();
 
+        public long LastKnownSeqno { get; private set; }
+
         public List<Jetton> KnownJettons { get; private set; } = [];
 
         public List<Pool> AllPools { get; private set; } = [];
@@ -21,6 +23,7 @@
             var db = scopeServiceProvider.GetRequiredService<IDbProvider>();
 
             InMainnet = db.MainDb.Find<Settings>(Settings.KeyNetType)?.BoolValue ?? default;
+            LastKnownSeqno = db.MainDb.Find<Settings>(Settings.KeyLastSeqno)?.LongValue ?? default;
             AllPools = db.MainDb.Table<Pool>().ToList();
             KnownJettons = db.MainDb.Table<Jetton>().ToList();
 

@@ -6,6 +6,7 @@
     {
         public const string KeyDbVersion = "DB_VERSION";
         public const string KeyNetType = "NET_TYPE";
+        public const string KeyLastSeqno = "LAST_SEQNO";
 
         [Obsolete("For data layer only")]
         public Settings()

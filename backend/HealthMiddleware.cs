@@ -118,7 +118,7 @@
 
             yield return ("Entity J", cd.KnownJettons.Count);
 
-            ////yield return ("Masterchain seqno", cd.LastKnownSeqno.ToString(CultureInfo.InvariantCulture));
+            yield return ("Masterchain seqno", cd.LastKnownSeqno.ToString(CultureInfo.InvariantCulture));
 
             var ownTasks = StartupApi.RegisteredTasks
                 .Select(x =>
