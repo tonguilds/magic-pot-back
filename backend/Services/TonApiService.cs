@@ -1,17 +1,21 @@
 ﻿namespace MagicPot.Backend.Services
 {
     using MagicPot.Backend.Data;
+    using Microsoft.Extensions.Options;
+    using TonLibDotNet;
 
-    public class TonApiService(HttpClient httpClient)
+    public class TonApiService(HttpClient httpClient, IOptions<TonOptions> tonOptions)
     {
         private static DateTimeOffset lastRequest = DateTimeOffset.MinValue;
         private static int requestCount = 0;
+
+        private readonly string baseUrl = tonOptions.Value.UseMainnet ? "tonapi.io" : "testnet.tonapi.io";
 
         public async Task<Jetton?> GetJettonInfo(string address)
         {
             await WaitIfNeeded();
 
-            using var resp = await httpClient.GetAsync($"https://tonapi.io/v2/jettons/{address}");
+            using var resp = await httpClient.GetAsync($"https://{baseUrl}/v2/jettons/{address}");
 
             if (resp.IsSuccessStatusCode)
             {
