@@ -30,7 +30,11 @@
         {
             MainDb.CreateTable<Settings>();
             MainDb.CreateTable<Jetton>();
-            MainDb.CreateTable<Pool>();
+            MainDb.CreateTable<User>();
+            MainDb.CreateTable<Pot>();
+            MainDb.CreateTable<PrecachedMnemonic>();
+            MainDb.CreateTable<QueuePotUpdate>();
+            MainDb.CreateTable<UserJettonWallet>();
 
             UpdateDb(MainDb);
 

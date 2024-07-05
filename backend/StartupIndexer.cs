@@ -37,11 +37,15 @@
 
             services.AddTask<HealthReportTask>(o => o.AutoStart(HealthReportTask.DefaultInterval, TimeSpan.FromSeconds(3)));
             services.AddTask<SyncTask>(o => o.AutoStart(SyncTask.DefaultInterval));
+            services.AddTask<PrecacheMnemonicsTask>(o => o.AutoStart(PrecacheMnemonicsTask.DefaultInterval));
+            services.AddTask<DetectUserJettonAddressesTask>(o => o.AutoStart(DetectUserJettonAddressesTask.DefaultInterval));
 
             RegisteredTasks =
                 [
                     typeof(ITask<HealthReportTask>),
                     typeof(ITask<SyncTask>),
+                    typeof(ITask<PrecacheMnemonicsTask>),
+                    typeof(ITask<DetectUserJettonAddressesTask>),
                 ];
         }
     }

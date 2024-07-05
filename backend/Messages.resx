@@ -120,9 +120,6 @@
   <data name="AddressIsNotAJetton" xml:space="preserve">
     <value>Token address is not a Jetton Master address.</value>
   </data>
-  <data name="InvalidTokenAddress" xml:space="preserve">
-    <value>Token address is not a valid address.</value>
-  </data>
   <data name="MaxAllowedValueIs100" xml:space="preserve">
     <value>Must not be greather than 100.</value>
   </data>
@@ -140,5 +137,8 @@
   </data>
   <data name="UnknownTokenName" xml:space="preserve">
     <value>Token name is not known.</value>
+  </data>
+  <data name="ValidatingUserJettonWallet" xml:space="preserve">
+    <value>Validating your jetton wallet... Please retry in 5-10 seconds.</value>
   </data>
 </root>

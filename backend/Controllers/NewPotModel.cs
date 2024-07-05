@@ -2,9 +2,18 @@
 {
     using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
+    using MagicPot.Backend.Attributes;
 
     public class NewPotModel : IValidatableObject
     {
+        /// <summary>
+        /// Address of main user wallet (connected in Ton Connect).
+        /// </summary>
+        [Required(AllowEmptyStrings = false)]
+        [MaxLength(100)]
+        [TonAddress]
+        public string UserAddress { get; set; } = string.Empty;
+
         /// <summary>
         /// Pot name.
         /// </summary>
@@ -28,6 +37,7 @@
         /// <para>Either Token Name, or Token Address must be specified, not both.</para>
         /// </remarks>
         [MaxLength(100)]
+        [TonAddress]
         public string? TokenAddress { get; set; }
 
         /// <summary>

@@ -16,10 +16,10 @@
 
         public TimeSpan IndexerSubprocessRestartInterval { get; set; } = TimeSpan.FromHours(2);
 
-        public string TelegramBotTokenHash { get; set; } = string.Empty;
-
         public TimeSpan TelegramInitDataValidity { get; set; } = TimeSpan.FromHours(1);
 
         public Dictionary<string, string> WellKnownJettons { get; private set; } = new(StringComparer.OrdinalIgnoreCase);
+
+        public string TelegramBotToken { get; set; } = string.Empty;
     }
 }

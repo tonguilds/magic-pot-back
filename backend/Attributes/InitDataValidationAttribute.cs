@@ -25,14 +25,10 @@
             }
 
             var opt = validationContext.GetRequiredService<CachedData>();
-
-            var hash = opt.Options.TelegramBotTokenHash;
-            if (string.IsNullOrEmpty(hash))
+            if (opt.TelegramBotTokenWebappdataHash.Length == 0)
             {
-                return new ValidationResult("Failed to validate: no TokenHash configured");
+                return new ValidationResult("Failed to validate: no Bot Token configured");
             }
-
-            var tokenHashBytes = Convert.FromHexString(hash);
 
             var pairs = HttpUtility.ParseQueryString(initData);
             var providedHashHex = pairs.Get("hash");
@@ -42,7 +38,7 @@
                 '\n',
                 pairs.AllKeys.OrderBy(x => x).Select(x => x + "=" + pairs[x]));
 
-            var actualHash = HMACSHA256.HashData(tokenHashBytes, System.Text.Encoding.UTF8.GetBytes(data));
+            var actualHash = HMACSHA256.HashData(opt.TelegramBotTokenWebappdataHash, System.Text.Encoding.UTF8.GetBytes(data));
             var actualHashHex = Convert.ToHexString(actualHash);
 
             if (!StringComparer.OrdinalIgnoreCase.Equals(providedHashHex, actualHashHex))

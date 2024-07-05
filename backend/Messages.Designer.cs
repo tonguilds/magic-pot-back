@@ -70,15 +70,6 @@ namespace MagicPot.Backend {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Token address is not a valid address..
-        /// </summary>
-        public static string InvalidTokenAddress {
-            get {
-                return ResourceManager.GetString("InvalidTokenAddress", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Must not be greather than 100..
         /// </summary>
         public static string MaxAllowedValueIs100 {
@@ -129,6 +120,15 @@ namespace MagicPot.Backend {
         public static string UnknownTokenName {
             get {
                 return ResourceManager.GetString("UnknownTokenName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Validating your jetton wallet... Please retry in 5-10 seconds..
+        /// </summary>
+        public static string ValidatingUserJettonWallet {
+            get {
+                return ResourceManager.GetString("ValidatingUserJettonWallet", resourceCulture);
             }
         }
     }
