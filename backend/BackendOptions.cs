@@ -2,7 +2,7 @@
 {
     public class BackendOptions
     {
-        public const string TelegramInitDataHeaderName = "X_InitData";
+        public const string TelegramInitDataHeaderName = "X-InitData";
 
         public string DatabaseFile { get; set; } = "./backend.db";
 
