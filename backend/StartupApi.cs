@@ -37,6 +37,9 @@
 
             services.AddTask<IndexerControlTask>(o => o.AutoStart(IndexerControlTask.Interval, TimeSpan.FromSeconds(5)), ServiceLifetime.Singleton);
 
+            // Required for correct DB initialization (e.g. UseMainnet flag)
+            services.Configure<TonLibDotNet.TonOptions>(configuration.GetSection("TonOptions"));
+
             services.AddHttpClient<TonApiService>()
                 .AddTransientHttpErrorPolicy(p => p.WaitAndRetryAsync(3, _ => TimeSpan.FromSeconds(1)));
 
