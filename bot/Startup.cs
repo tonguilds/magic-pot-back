@@ -18,13 +18,15 @@
             var bo = new BotOptions();
             bos.Bind(bo);
 
-            services.AddTelegramBot<MagicPotBot>(bo.Token, bo.Endpoint);
+            services.AddTelegramBot<MagicPotBot>(bo.Token, bo.WebhookUrl);
             services.AddTelegramBotCommandHandlers(typeof(Startup).Assembly);
+            services.AddTask<InitialConnectionTask>(o => o.AutoStart(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(5)));
         }
 
         public void Configure(IApplicationBuilder app)
         {
             app.UseTelegramBot<MagicPotBot>();
+
             app.UseMiddleware<RobotsTxtMiddleware>();
 
             app.Run(async (context) =>
