@@ -20,7 +20,6 @@
 
             services.AddTelegramBot<MagicPotBot>(bo.Token, bo.WebhookUrl);
             services.AddTelegramBotCommandHandlers(typeof(Startup).Assembly);
-            services.AddTask<InitialConnectionTask>(o => o.AutoStart(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(5)));
         }
 
         public void Configure(IApplicationBuilder app)

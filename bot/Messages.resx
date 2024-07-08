@@ -137,6 +137,6 @@
   </data>
   <data name="StartCommandText" xml:space="preserve">
     <value>Hello {0}!
-What do you want to do?</value>
+What do you want to do today?</value>
   </data>
 </root>

@@ -116,7 +116,7 @@ namespace MagicPot.Bot {
         
         /// <summary>
         ///   Looks up a localized string similar to Hello {0}!
-        ///What do you want to do?.
+        ///What do you want to do today?.
         /// </summary>
         public static string StartCommandText {
             get {

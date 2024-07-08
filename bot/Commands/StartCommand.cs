@@ -17,7 +17,7 @@
                 ReplyMarkup = new InlineKeyboardMarkup
                 {
                     InlineKeyboard = [
-                        [new InlineKeyboardButton { Text = Messages.CreatePot, Url = "https://magic-pot-frontend.vercel.app/" }],
+                        [new InlineKeyboardButton { Text = Messages.CreatePot, WebApp = new() { Url = "https://magic-pot-frontend.vercel.app/" } }],
                         [new InlineKeyboardButton { Text = Messages.Announcements, Url = "https://t.me/themagicpot" }],
                         [
                             new InlineKeyboardButton { Text = Messages.Chat, Url = "https://t.me/themagicpot_fam" },
