@@ -106,15 +106,16 @@
                 yield return new ValidationResult(Messages.TokenNameOrAddressRequired, [nameof(TokenAddress)]);
             }
 
-            var totalOk = (FinalTransactionPercent + PreFinalTransactionsPercent + ReferralsPercent + CreatorPercent + BurnPercent) == 100;
+            var sharesSum = FinalTransactionPercent + PreFinalTransactionsPercent + ReferralsPercent + CreatorPercent + BurnPercent;
+            var sharesOk = sharesSum == 100;
 
-            if (FinalTransactionPercent > 0)
+            if (FinalTransactionPercent > 0 || sharesSum == 0)
             {
                 if (FinalTransactionPercent > 100)
                 {
                     yield return new ValidationResult(Messages.MaxAllowedValueIs100, [nameof(FinalTransactionPercent)]);
                 }
-                else if (!totalOk)
+                else if (!sharesOk)
                 {
                     yield return new ValidationResult(Messages.SumOfSharesMustBe100, [nameof(FinalTransactionPercent)]);
                 }
@@ -126,7 +127,7 @@
                 {
                     yield return new ValidationResult(Messages.MaxAllowedValueIs100, [nameof(PreFinalTransactionsPercent)]);
                 }
-                else if (!totalOk)
+                else if (!sharesOk)
                 {
                     yield return new ValidationResult(Messages.SumOfSharesMustBe100, [nameof(PreFinalTransactionsPercent)]);
                 }
@@ -150,7 +151,7 @@
                 {
                     yield return new ValidationResult(Messages.MaxAllowedValueIs100, [nameof(ReferralsPercent)]);
                 }
-                else if (!totalOk)
+                else if (!sharesOk)
                 {
                     yield return new ValidationResult(Messages.SumOfSharesMustBe100, [nameof(ReferralsPercent)]);
                 }
@@ -162,7 +163,7 @@
                 {
                     yield return new ValidationResult(Messages.MaxAllowedValueIs100, [nameof(CreatorPercent)]);
                 }
-                else if (!totalOk)
+                else if (!sharesOk)
                 {
                     yield return new ValidationResult(Messages.SumOfSharesMustBe100, [nameof(CreatorPercent)]);
                 }
@@ -174,7 +175,7 @@
                 {
                     yield return new ValidationResult(Messages.MaxAllowedValueIs100, [nameof(BurnPercent)]);
                 }
-                else if (!totalOk)
+                else if (!sharesOk)
                 {
                     yield return new ValidationResult(Messages.SumOfSharesMustBe100, [nameof(BurnPercent)]);
                 }
