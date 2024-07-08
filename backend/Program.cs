@@ -36,6 +36,7 @@ namespace MagicPot.Backend
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<StartupApi>();
+                    webBuilder.ConfigureKestrel((context, options) => context.Configuration.GetSection("Kestrel").Bind(options));
                 });
 
         public static IHostBuilder CreateIndexerHostBuilder(string[] args) =>

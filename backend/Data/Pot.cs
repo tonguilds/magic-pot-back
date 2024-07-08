@@ -49,5 +49,7 @@
 
         [NotNull]
         public DateTimeOffset Created { get; set; }
+
+        public string? CoverImage { get; set; }
     }
 }

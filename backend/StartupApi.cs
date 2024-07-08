@@ -43,6 +43,10 @@
             services.AddHttpClient<TonApiService>()
                 .AddTransientHttpErrorPolicy(p => p.WaitAndRetryAsync(3, _ => TimeSpan.FromSeconds(1)));
 
+            services.Configure<PinataOptions>(configuration.GetSection("PinataOptions"));
+            services.AddHttpClient<IFileService, PinataService>()
+                .AddTransientHttpErrorPolicy(p => p.WaitAndRetryAsync(3, _ => TimeSpan.FromSeconds(1)));
+
             services.AddTask<RunOnceTask>(o => o.AutoStart(RunOnceTask.Interval, TimeSpan.FromSeconds(3)));
 
             services.AddEndpointsApiExplorer();
