@@ -11,6 +11,8 @@
     {
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddSingleton<RobotsTxtMiddleware>();
+
             var bos = configuration.GetSection("BotOptions");
             services.Configure<BotOptions>(bos);
             var bo = new BotOptions();
