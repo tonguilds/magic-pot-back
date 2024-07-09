@@ -44,6 +44,40 @@
             return result;
         }
 
+        public static int? TryDecodeInt(string? toDecode)
+        {
+            if (string.IsNullOrEmpty(toDecode))
+            {
+                return null;
+            }
+
+            try
+            {
+                return DecodeInt(toDecode);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        public static long? TryDecodeLong(string? toDecode)
+        {
+            if (string.IsNullOrEmpty(toDecode))
+            {
+                return null;
+            }
+
+            try
+            {
+                return DecodeLong(toDecode);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
         /// <summary>
         /// Encodes int value to Base36. Optionally, pads with zeroes.
         /// </summary>

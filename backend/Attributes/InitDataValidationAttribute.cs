@@ -12,8 +12,14 @@
         public static long GetUserIdWithoutValidation(string initData)
         {
             var pairs = HttpUtility.ParseQueryString(initData);
-            var usr = JsonSerializer.Deserialize<InitDataUser>(pairs["user"] ?? string.Empty, JsonSerializerOptions.Default);
-            return usr?.Id ?? 0;
+            var usr = JsonSerializer.Deserialize<InitDataUser>(pairs["user"] ?? string.Empty, JsonSerializerOptions.Default)!;
+            return usr.Id;
+        }
+
+        public static InitDataUser GetUserDataWithoutValidation(string initData)
+        {
+            var pairs = HttpUtility.ParseQueryString(initData);
+            return JsonSerializer.Deserialize<InitDataUser>(pairs["user"] ?? string.Empty, JsonSerializerOptions.Default)!;
         }
 
         protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
@@ -61,7 +67,7 @@
             return ValidationResult.Success;
         }
 
-        protected sealed class InitDataUser
+        public sealed class InitDataUser
         {
             [JsonPropertyName("id")]
             public long Id { get; set; }
