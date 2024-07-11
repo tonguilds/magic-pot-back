@@ -2,6 +2,7 @@
 {
     using System.ComponentModel.DataAnnotations;
     using System.Net.Mime;
+    using System.Numerics;
     using MagicPot.Backend.Attributes;
     using MagicPot.Backend.Data;
     using MagicPot.Backend.Services.Api;
@@ -293,12 +294,17 @@
 
         protected (string RawAddress, long Amount, string Payload) PrepareTxInfo(Pot pot, Jetton jetton, string userJettonAddress)
         {
-            var rawAddress = AddressConverter.ToRaw(pot.OwnerUserAddress);
-            var tonAmount = TonLibDotNet.Utils.CoinUtils.Instance.ToNano(0.1M);
-
-            ////var jettonAmount = new BigInteger(pot.InitialSize) * Math.Pow(10, jetton.Decimals);
-            ////var payload = TonLibDotNet.Recipes.Tep74Jettons.Instance.CreateTransferCell((ulong)pot.Id, jettonAmount, pot.Address, pot.Address, null, 0.001M, null);
-            var payload = new CellBuilder().StoreInt(0, 32).StoreString("Test").Build();
+            var rawAddress = AddressConverter.ToRaw(userJettonAddress);
+            var tonAmount = TonLibDotNet.Utils.CoinUtils.Instance.ToNano(0.5M + 0.2M);
+            var jettonAmount = (BigInteger)pot.InitialSize * (BigInteger)Math.Pow(10, jetton.Decimals);
+            var payload = TonLibDotNet.Recipes.Tep74Jettons.Instance.CreateTransferCell(
+                (ulong)pot.Id,
+                jettonAmount,
+                pot.OwnerUserAddress,
+                pot.Address,
+                null,
+                0.02M,
+                null);
 
             return (rawAddress, tonAmount, payload.ToBoc().SerializeToBase64());
         }
