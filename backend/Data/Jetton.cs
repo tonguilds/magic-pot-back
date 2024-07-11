@@ -2,6 +2,8 @@
 {
     using SQLite;
 
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+
     public class Jetton
     {
         [PrimaryKey]
@@ -12,17 +14,21 @@
         /// Jetton master contract address (in bounceable mode).
         /// </summary>
         [NotNull]
-        public string Address { get; set; } = string.Empty;
+        [MaxLength(DbProvider.MaxLenAddress)]
+        public string Address { get; set; }
 
         [NotNull]
-        public string Name { get; set; } = string.Empty;
+        [MaxLength(DbProvider.MaxLen255)]
+        public string Name { get; set; }
 
         [NotNull]
-        public string Symbol { get; set; } = string.Empty;
+        [MaxLength(DbProvider.MaxLen255)]
+        public string Symbol { get; set; }
 
         [NotNull]
         public byte Decimals { get; set; }
 
+        [MaxLength(DbProvider.MaxLenUri)]
         public string? Image { get; set; }
 
         public string? Description { get; set; }

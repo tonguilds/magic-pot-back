@@ -1,6 +1,7 @@
 ﻿namespace MagicPot.Backend
 {
-    using MagicPot.Backend.Services;
+    using MagicPot.Backend.Data;
+    using MagicPot.Backend.Services.Indexer;
     using Microsoft.Extensions.Configuration;
     using RecurrentTasks;
     using TonLibDotNet;
@@ -39,6 +40,7 @@
             services.AddTask<SyncTask>(o => o.AutoStart(SyncTask.DefaultInterval));
             services.AddTask<PrecacheMnemonicsTask>(o => o.AutoStart(PrecacheMnemonicsTask.DefaultInterval));
             services.AddTask<DetectUserJettonAddressesTask>(o => o.AutoStart(DetectUserJettonAddressesTask.DefaultInterval));
+            services.AddTask<PotUpdateTask>(o => o.AutoStart(PotUpdateTask.DefaultInterval));
 
             RegisteredTasks =
                 [
@@ -46,6 +48,7 @@
                     typeof(ITask<SyncTask>),
                     typeof(ITask<PrecacheMnemonicsTask>),
                     typeof(ITask<DetectUserJettonAddressesTask>),
+                    typeof(ITask<PotUpdateTask>),
                 ];
         }
     }

@@ -2,7 +2,8 @@
 {
     using System.Reflection;
     using System.Text.Json.Serialization;
-    using MagicPot.Backend.Services;
+    using MagicPot.Backend.Data;
+    using MagicPot.Backend.Services.Api;
     using Microsoft.OpenApi.Models;
     using Polly;
     using RecurrentTasks;
@@ -25,9 +26,7 @@
 
             var optionsSection = configuration.GetSection("BackendOptions");
             services.Configure<BackendOptions>(optionsSection);
-
-            var bo = new BackendOptions();
-            optionsSection.Bind(bo);
+            var bo = optionsSection.Get<BackendOptions>()!;
 
             services.AddScoped<IDbProvider, DbProvider>();
             services.AddScoped(sp => new Lazy<IDbProvider>(() => sp.GetRequiredService<IDbProvider>()));
@@ -47,7 +46,7 @@
             services.AddHttpClient<IFileService, PinataService>()
                 .AddTransientHttpErrorPolicy(p => p.WaitAndRetryAsync(3, _ => TimeSpan.FromSeconds(1)));
 
-            services.AddTask<RunOnceTask>(o => o.AutoStart(RunOnceTask.Interval, TimeSpan.FromSeconds(3)));
+            services.AddTask<StartupTask>(o => o.AutoStart(StartupTask.Interval, TimeSpan.FromSeconds(3)));
 
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen(o =>
@@ -78,7 +77,7 @@
                 [
                     typeof(ITask<CachedData>),
                     typeof(ITask<IndexerControlTask>),
-                    typeof(ITask<RunOnceTask>),
+                    typeof(ITask<StartupTask>),
                 ];
         }
 

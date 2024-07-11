@@ -5,15 +5,13 @@
     using System.Text.Json;
     using System.Text.Json.Serialization;
     using System.Web;
-    using MagicPot.Backend.Services;
+    using MagicPot.Backend.Services.Api;
 
     public class InitDataValidationAttribute : ValidationAttribute
     {
         public static long GetUserIdWithoutValidation(string initData)
         {
-            var pairs = HttpUtility.ParseQueryString(initData);
-            var usr = JsonSerializer.Deserialize<InitDataUser>(pairs["user"] ?? string.Empty, JsonSerializerOptions.Default)!;
-            return usr.Id;
+            return GetUserDataWithoutValidation(initData).Id;
         }
 
         public static InitDataUser GetUserDataWithoutValidation(string initData)

@@ -1,15 +1,14 @@
-﻿namespace MagicPot.Backend.Services
+﻿namespace MagicPot.Backend.Services.Api
 {
     using MagicPot.Backend.Data;
-    using Microsoft.Extensions.Options;
-    using TonLibDotNet;
+    using MagicPot.Backend.Utils;
 
-    public class TonApiService(HttpClient httpClient, IOptions<TonOptions> tonOptions)
+    public class TonApiService(HttpClient httpClient)
     {
         private static DateTimeOffset lastRequest = DateTimeOffset.MinValue;
         private static int requestCount = 0;
 
-        private readonly string baseUrl = tonOptions.Value.UseMainnet ? "tonapi.io" : "testnet.tonapi.io";
+        private readonly string baseUrl = Program.InMainnet ? "tonapi.io" : "testnet.tonapi.io";
 
         public async Task<Jetton?> GetJettonInfo(string address)
         {
@@ -24,7 +23,7 @@
                 {
                     return new Jetton()
                     {
-                        Address = TonLibDotNet.Utils.AddressUtils.Instance.SetBounceable(address, true),
+                        Address = AddressConverter.ToContract(address),
                         Name = info.metadata.name,
                         Symbol = info.metadata.symbol,
                         Decimals = info.metadata.decimals,

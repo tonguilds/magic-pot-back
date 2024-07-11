@@ -1,4 +1,4 @@
-﻿namespace MagicPot.Backend.Services
+﻿namespace MagicPot.Backend.Services.Api
 {
     using System.Diagnostics;
     using Microsoft.Extensions.Options;
@@ -79,7 +79,12 @@
 
                 if (disposing)
                 {
-                    indexer?.Kill();
+                    if (indexer != null)
+                    {
+                        indexer.Kill();
+                        indexer.WaitForExit();
+                        logger.LogInformation("Process killed: PID={PID}", indexer.Id);
+                    }
                 }
 
                 disposed = true;

@@ -1,11 +1,16 @@
-﻿namespace MagicPot.Backend
+﻿namespace MagicPot.Backend.Data
 {
-    using MagicPot.Backend.Data;
     using Microsoft.Extensions.Options;
     using SQLite;
 
     public class DbProvider : IDbProvider
     {
+        public const int MaxLenKey = 20;
+        public const int MaxLenName = 60;
+        public const int MaxLenAddress = 100;
+        public const int MaxLenUri = 1024;
+        public const int MaxLen255 = 255;
+
         private readonly BackendOptions options;
         private readonly ILogger logger;
 
@@ -32,8 +37,8 @@
             MainDb.CreateTable<Jetton>();
             MainDb.CreateTable<User>();
             MainDb.CreateTable<Pot>();
+            MainDb.CreateTable<PotTransaction>();
             MainDb.CreateTable<PrecachedMnemonic>();
-            MainDb.CreateTable<QueuePotUpdate>();
             MainDb.CreateTable<UserJettonWallet>();
 
             UpdateDb(MainDb);
@@ -48,6 +53,30 @@
             logger.LogDebug("Reconnected to DB");
             await Task.Delay(TimeSpan.FromSeconds(5));
             olddb.Close();
+        }
+
+        public User GetOrCreateUser(long id, string username)
+        {
+            var user = MainDb.Find<User>(id);
+
+            if (user == null)
+            {
+                user = new User()
+                {
+                    Id = id,
+                    Username = username,
+                    Created = DateTimeOffset.UtcNow,
+                };
+
+                MainDb.Insert(user);
+            }
+            else if (!StringComparer.Ordinal.Equals(user.Username, username))
+            {
+                user.Username = username;
+                MainDb.Update(user);
+            }
+
+            return user;
         }
 
         public void Dispose()
@@ -73,7 +102,7 @@
         {
             var file = Path.GetFullPath(options.DatabaseFile);
             var conn = new SQLiteConnection(file);
-            conn.ExecuteScalar<string>("PRAGMA journal_mode=WAL");
+            conn.EnableWriteAheadLogging();
             return conn;
         }
 
@@ -105,8 +134,14 @@
 
             if (ver != lastVersion)
             {
-                throw new ApplicationException($"Failed to update DB: actual version {ver} does not equal to expected {lastVersion}");
+                throw new UpdateDbException(ver, lastVersion);
             }
+        }
+
+        public class UpdateDbException(int actualVersion, int expectedVersion)
+            : Exception($"Failed to update DB: actual version {actualVersion} does not equal to expected {expectedVersion}")
+        {
+            // Nothing
         }
     }
 }

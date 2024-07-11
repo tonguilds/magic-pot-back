@@ -1,7 +1,7 @@
 ﻿namespace MagicPot.Backend.Controllers
 {
     using System.Net.Mime;
-    using MagicPot.Backend.Services;
+    using MagicPot.Backend.Services.Api;
     using Microsoft.AspNetCore.Mvc;
     using Swashbuckle.AspNetCore.Annotations;
 
@@ -20,7 +20,7 @@
         {
             return new BackendStatus
             {
-                InMainnet = cachedData.InMainnet,
+                InMainnet = Program.InMainnet,
                 KnownJettonCount = cachedData.KnownJettons.Count,
             };
         }

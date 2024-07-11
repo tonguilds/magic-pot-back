@@ -1,4 +1,4 @@
-﻿namespace MagicPot.Backend
+﻿namespace MagicPot.Backend.Data
 {
     using SQLite;
 
@@ -9,5 +9,7 @@
         void Migrate();
 
         Task Reconnect();
+
+        User GetOrCreateUser(long id, string username);
     }
 }

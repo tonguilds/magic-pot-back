@@ -2,6 +2,8 @@
 {
     using SQLite;
 
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+
     public class UserJettonWallet
     {
         [PrimaryKey]
@@ -10,13 +12,16 @@
 
         [NotNull]
         [Indexed("UserJetton", 1, Unique = true)]
-        public string MainWallet { get; set; } = string.Empty;
+        [MaxLength(DbProvider.MaxLenAddress)]
+        public string MainWallet { get; set; }
 
         [NotNull]
         [Indexed("UserJetton", 2, Unique = true)]
-        public string JettonMaster { get; set; } = string.Empty;
+        [MaxLength(DbProvider.MaxLenAddress)]
+        public string JettonMaster { get; set; }
 
         [Indexed]
+        [MaxLength(DbProvider.MaxLenAddress)]
         public string? JettonWallet { get; set; }
 
         [NotNull]

@@ -1,10 +1,12 @@
-﻿namespace MagicPot.Backend.Services
+﻿namespace MagicPot.Backend.Services.Api
 {
+    using MagicPot.Backend;
     using MagicPot.Backend.Data;
+    using MagicPot.Backend.Utils;
     using Microsoft.Extensions.Options;
     using RecurrentTasks;
 
-    public class RunOnceTask(ILogger<RunOnceTask> logger, IOptions<BackendOptions> options, IDbProvider dbProvider, TonApiService tonApiService)
+    public class StartupTask(ILogger<StartupTask> logger, IOptions<BackendOptions> options, IDbProvider dbProvider, TonApiService tonApiService)
         : IRunnable
     {
         public static readonly TimeSpan Interval = TimeSpan.FromMinutes(1);
@@ -31,20 +33,20 @@
             foreach (var (name, address) in options.Value.WellKnownJettons)
             {
                 count++;
-                var adr = TonLibDotNet.Utils.AddressUtils.Instance.SetBounceable(address, true);
-                var existing = list.Find(x => x.Address == adr);
-                if (existing == null)
+                var adr = AddressConverter.ToContract(address);
+                var jetton = list.Find(x => x.Address == adr);
+                if (jetton == null)
                 {
-                    existing = await tonApiService.GetJettonInfo(address);
-                    if (existing == null)
+                    jetton = await tonApiService.GetJettonInfo(address);
+                    if (jetton == null)
                     {
                         logger.LogError("Failed to get info for Jetton '{Name}' {Address}", name, address);
                     }
                     else
                     {
-                        dbProvider.MainDb.Insert(existing);
+                        dbProvider.MainDb.Insert(jetton);
                         changed = true;
-                        logger.LogInformation("New Jetton saved: {Symbol} {Address} ({Name})", existing.Symbol, existing.Address, existing.Name);
+                        logger.LogInformation("New Jetton saved: {Symbol} {Address} ({Name})", jetton.Symbol, jetton.Address, jetton.Name);
                     }
                 }
             }

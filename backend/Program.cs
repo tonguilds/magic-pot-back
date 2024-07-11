@@ -1,5 +1,6 @@
 namespace MagicPot.Backend
 {
+    using MagicPot.Backend.Data;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
@@ -11,6 +12,8 @@ namespace MagicPot.Backend
         public const string StartAsIndexerArg = "--indexer";
 
         public static bool InIndexerMode { get; private set; }
+
+        public static bool InMainnet { get; private set; }
 
         public static async Task Main(string[] args)
         {
@@ -49,21 +52,21 @@ namespace MagicPot.Backend
         {
             var tonOpt = serviceProvider.GetRequiredService<IOptions<TonOptions>>();
 
-            var inMainnet = tonOpt.Value.UseMainnet;
+            InMainnet = tonOpt.Value.UseMainnet;
 
             var setting = db.MainDb.Find<Settings>(Settings.KeyNetType);
             if (setting == null)
             {
-                setting = new Settings(Settings.KeyNetType, inMainnet);
+                setting = new Settings(Settings.KeyNetType, InMainnet);
                 db.MainDb.Insert(setting);
             }
-            else if (setting.BoolValue != inMainnet)
+            else if (setting.BoolValue != InMainnet)
             {
-                logger.LogError("Net type mismatch: saved mainnet='{Saved}', configured mainnet='{Configured}'. Erase db to start with new net type!", setting.BoolValue, inMainnet);
+                logger.LogError("Net type mismatch: saved mainnet='{Saved}', configured mainnet='{Configured}'. Erase db to start with new net type!", setting.BoolValue, InMainnet);
                 throw new InvalidOperationException("Net type changed");
             }
 
-            logger.Log(inMainnet ? LogLevel.Information : LogLevel.Warning, "Net type is mainnet: {Value}", inMainnet);
+            logger.Log(InMainnet ? LogLevel.Information : LogLevel.Warning, "Net type is mainnet: {Value}", InMainnet);
         }
     }
 }

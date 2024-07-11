@@ -7,7 +7,7 @@
         [PrimaryKey]
         public long Id { get; set; }
 
-        [MaxLength(100)]
+        [MaxLength(DbProvider.MaxLen255)]
         public string? Username { get; set; }
 
         [Indexed]

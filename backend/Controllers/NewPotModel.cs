@@ -3,6 +3,7 @@
     using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
     using MagicPot.Backend.Attributes;
+    using MagicPot.Backend.Data;
 
     public class NewPotModel : IValidatableObject
     {
@@ -10,7 +11,7 @@
         /// Address of main user wallet (connected in Ton Connect).
         /// </summary>
         [Required(AllowEmptyStrings = false)]
-        [MaxLength(100)]
+        [MaxLength(DbProvider.MaxLenAddress)]
         [TonAddress]
         public string UserAddress { get; set; } = string.Empty;
 
@@ -18,7 +19,7 @@
         /// Pot name.
         /// </summary>
         [Required(AllowEmptyStrings = false)]
-        [MaxLength(60)]
+        [MaxLength(DbProvider.MaxLenName)]
         public string Name { get; set; } = string.Empty;
 
         /// <summary>
@@ -27,7 +28,7 @@
         /// <remarks>
         /// <para>Either Token Name, or Token Address must be specified, not both.</para>
         /// </remarks>
-        [MaxLength(100)]
+        [MaxLength(DbProvider.MaxLenName)]
         public string? TokenName { get; set; }
 
         /// <summary>
@@ -36,7 +37,7 @@
         /// <remarks>
         /// <para>Either Token Name, or Token Address must be specified, not both.</para>
         /// </remarks>
-        [MaxLength(100)]
+        [MaxLength(DbProvider.MaxLenAddress)]
         [TonAddress]
         public string? TokenAddress { get; set; }
 

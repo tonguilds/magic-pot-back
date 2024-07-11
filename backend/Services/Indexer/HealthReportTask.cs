@@ -1,6 +1,7 @@
-﻿namespace MagicPot.Backend.Services
+﻿namespace MagicPot.Backend.Services.Indexer
 {
     using System.Text.Json;
+    using MagicPot.Backend;
     using Microsoft.Extensions.Options;
     using RecurrentTasks;
 
@@ -17,7 +18,7 @@
         {
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-            this.path = backendOptions.Value.HealthReportPath;
+            path = backendOptions.Value.HealthReportPath;
             this.httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
         }
 
@@ -40,7 +41,7 @@
             return StartupIndexer.RegisteredTasks
                 .Select(x =>
                 {
-                    var task = (RecurrentTasks.ITask)scopeServiceProvider.GetRequiredService(x);
+                    var task = (ITask)scopeServiceProvider.GetRequiredService(x);
                     return new HealthMiddleware.TaskInfo
                     {
                         Name = x.GenericTypeArguments[0].Name,

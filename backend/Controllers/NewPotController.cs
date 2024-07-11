@@ -4,7 +4,8 @@
     using System.Net.Mime;
     using MagicPot.Backend.Attributes;
     using MagicPot.Backend.Data;
-    using MagicPot.Backend.Services;
+    using MagicPot.Backend.Services.Api;
+    using MagicPot.Backend.Utils;
     using Microsoft.AspNetCore.Mvc;
     using SixLabors.ImageSharp;
     using Swashbuckle.AspNetCore.Annotations;
@@ -82,17 +83,19 @@
                 return new BadRequestObjectResult(new ValidationProblemDetails(ModelState));
             }
 
-            var userId = InitDataValidationAttribute.GetUserIdWithoutValidation(initData);
+            var tgUser = InitDataValidationAttribute.GetUserDataWithoutValidation(initData);
 
-            var pot = await CreatePot(model, userId, jetton!, coverImage);
-            var txInfo = PrepareTxInfo(pot, jetton!, userJettonAddress!);
+            var user = lazyDbProvider.Value.GetOrCreateUser(tgUser.Id, tgUser.Username);
+
+            var pot = await CreatePot(model, user.Id, jetton!.Address, coverImage);
+            var txInfo = PrepareTxInfo(pot, jetton, userJettonAddress!);
 
             return new NewPotInfo(pot.Key, txInfo.RawAddress, txInfo.Amount, txInfo.Payload);
         }
 
         protected async Task<(Jetton? Jetton, string? UserJettonWallet)> ValidateJetton(NewPotModel model)
         {
-            if (!string.IsNullOrEmpty(model.TokenName))
+            if (!string.IsNullOrWhiteSpace(model.TokenName))
             {
                 if (!cachedData.Options.WellKnownJettons.TryGetValue(model.TokenName, out var adr))
                 {
@@ -103,13 +106,13 @@
                 model.TokenAddress = adr;
             }
 
-            if (string.IsNullOrEmpty(model.TokenAddress))
+            if (string.IsNullOrWhiteSpace(model.TokenAddress))
             {
                 ModelState.AddModelError(nameof(model.TokenAddress), Messages.TokenNameOrAddressRequired);
                 return (null, null);
             }
 
-            model.TokenAddress = TonLibDotNet.Utils.AddressUtils.Instance.SetBounceable(model.TokenAddress, true);
+            model.TokenAddress = AddressConverter.ToContract(model.TokenAddress);
 
             var db = lazyDbProvider.Value.MainDb;
 
@@ -134,12 +137,12 @@
                 HttpContext.ReloadCachedData();
             }
 
-            if (string.IsNullOrEmpty(model.UserAddress))
+            if (string.IsNullOrWhiteSpace(model.UserAddress))
             {
                 return (null, null);
             }
 
-            model.UserAddress = TonLibDotNet.Utils.AddressUtils.Instance.SetBounceable(model.UserAddress, false);
+            model.UserAddress = AddressConverter.ToUser(model.UserAddress);
 
             var ujw = db.Find<UserJettonWallet>(x => x.MainWallet == model.UserAddress && x.JettonMaster == jetton.Address);
             if (ujw == null)
@@ -214,8 +217,8 @@
             for (var i = 0; i <= MaxRetries; i++)
             {
                 var id = Rand.NextInt64(int.MaxValue / 256, (long)int.MaxValue * 1024);
-                var existing = db.Find<Pot>(id);
-                if (existing == null)
+                var count = db.Table<Pot>().Count(x => x.Id == id);
+                if (count == 0)
                 {
                     return id;
                 }
@@ -241,7 +244,7 @@
             throw new CreateNewPotException($"Failed to generate Pot Contract Address (in {MaxRetries} attempts)");
         }
 
-        protected async Task<Pot> CreatePot(NewPotModel model, long userId, Jetton jetton, MemoryStream? coverImage)
+        protected async Task<Pot> CreatePot(NewPotModel model, long userId, string tokenAddress, MemoryStream? coverImage)
         {
             var db = lazyDbProvider.Value.MainDb;
 
@@ -251,10 +254,21 @@
                 Name = model.Name,
                 OwnerUserId = userId,
                 OwnerUserAddress = model.UserAddress,
-                TokenAddress = jetton.Address,
-                JettonWalletAddress = string.Empty,
+                JettonMaster = tokenAddress,
+                JettonWallet = string.Empty,
                 InitialSize = model.InitialSize,
+                TotalSize = 0,
+                State = PotState.Created,
                 Created = DateTimeOffset.UtcNow,
+                Countdown = TimeSpan.FromMinutes(model.CountdownTimerMinutes),
+                TxSizeNext = model.TransactionSize,
+                TxSizeIncrease = model.IncreasingTransactionPercentage / 100,
+                FinalTxPercent = model.FinalTransactionPercent,
+                PreFinalTxPercent = model.PreFinalTransactionsPercent,
+                PreFinalTxCount = model.PreFinalTransactionsCount,
+                ReferralsPercent = model.ReferralsPercent,
+                CreatorPercent = model.CreatorPercent,
+                BurnPercent = model.BurnPercent,
             };
 
             pot.Key = Base36.Encode(pot.Id);
@@ -270,19 +284,20 @@
             pot.Address = contract.Address;
             pot.Mnemonic = contract.Mnemonic;
 
+            pot.Touch();
+
             db.Insert(pot);
-            db.Insert(new QueuePotUpdate { PotId = pot.Id });
 
             return pot;
         }
 
         protected (string RawAddress, long Amount, string Payload) PrepareTxInfo(Pot pot, Jetton jetton, string userJettonAddress)
         {
-            var rawAddress = TonLibDotNet.Utils.AddressUtils.Instance.MakeRaw(pot.OwnerUserAddress);
+            var rawAddress = AddressConverter.ToRaw(pot.OwnerUserAddress);
             var tonAmount = TonLibDotNet.Utils.CoinUtils.Instance.ToNano(0.1M);
 
-            //var jettonAmount = new BigInteger(pot.InitialSize) * (10 ^ jetton.Decimals);
-            //var payload = TonLibDotNet.Recipes.Tep74Jettons.Instance.CreateTransferCell((ulong)pot.Id, jettonAmount, pot.Address, pot.Address, null, 0.001M, null);
+            ////var jettonAmount = new BigInteger(pot.InitialSize) * Math.Pow(10, jetton.Decimals);
+            ////var payload = TonLibDotNet.Recipes.Tep74Jettons.Instance.CreateTransferCell((ulong)pot.Id, jettonAmount, pot.Address, pot.Address, null, 0.001M, null);
             var payload = new CellBuilder().StoreInt(0, 32).StoreString("Test").Build();
 
             return (rawAddress, tonAmount, payload.ToBoc().SerializeToBase64());

@@ -1,6 +1,6 @@
 ﻿namespace MagicPot.Backend
 {
-    using MagicPot.Backend.Services;
+    using MagicPot.Backend.Services.Api;
     using Microsoft.Extensions.Options;
     using RecurrentTasks;
 

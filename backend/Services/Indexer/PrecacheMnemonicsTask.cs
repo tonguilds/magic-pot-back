@@ -1,6 +1,8 @@
-﻿namespace MagicPot.Backend.Services
+﻿namespace MagicPot.Backend.Services.Indexer
 {
+    using MagicPot.Backend;
     using MagicPot.Backend.Data;
+    using MagicPot.Backend.Utils;
     using RecurrentTasks;
     using TonLibDotNet;
     using TonLibDotNet.Types.Wallet;
@@ -37,7 +39,7 @@
 
                 var item = new PrecachedMnemonic
                 {
-                    Address = TonLibDotNet.Utils.AddressUtils.Instance.SetBounceable(address.Value, true),
+                    Address = AddressConverter.ToContract(address.Value),
                     Mnemonic = string.Join(' ', words.WordList),
                 };
                 dbProvider.MainDb.Insert(item);

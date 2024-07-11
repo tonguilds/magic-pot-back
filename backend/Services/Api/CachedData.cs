@@ -1,4 +1,4 @@
-﻿namespace MagicPot.Backend.Services
+﻿namespace MagicPot.Backend.Services.Api
 {
     using System.Security.Cryptography;
     using MagicPot.Backend.Data;
@@ -7,8 +7,6 @@
 
     public class CachedData : IRunnable
     {
-        public bool InMainnet { get; private set; }
-
         public BackendOptions Options { get; private set; } = new();
 
         public byte[] TelegramBotTokenWebappdataHash { get; private set; } = [];
@@ -23,7 +21,7 @@
         {
             Options = scopeServiceProvider.GetRequiredService<IOptionsSnapshot<BackendOptions>>().Value;
 
-            if (!string.IsNullOrEmpty(Options.TelegramBotToken))
+            if (!string.IsNullOrWhiteSpace(Options.TelegramBotToken))
             {
                 var tokenBytes = System.Text.Encoding.ASCII.GetBytes(Options.TelegramBotToken);
                 var keyBytes = System.Text.Encoding.ASCII.GetBytes("WebAppData");
@@ -32,15 +30,13 @@
 
             var db = scopeServiceProvider.GetRequiredService<IDbProvider>();
 
-            InMainnet = db.MainDb.Find<Settings>(Settings.KeyNetType)?.BoolValue ?? default;
             LastKnownSeqno = db.MainDb.Find<Settings>(Settings.KeyLastSeqno)?.LongValue ?? default;
             AllPools = db.MainDb.Table<Pot>().ToList();
             KnownJettons = db.MainDb.Table<Jetton>().ToList();
 
             var logger = scopeServiceProvider.GetRequiredService<ILogger<CachedData>>();
             logger.LogDebug(
-                "Reloaded: InMainnet={Mainnet}, KnownJettons={Count}",
-                InMainnet,
+                "Reloaded: KnownJettons={Count}",
                 KnownJettons.Count);
 
             return Task.CompletedTask;

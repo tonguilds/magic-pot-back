@@ -7,7 +7,7 @@
     using System.Reflection;
     using System.Text.Json;
     using System.Threading.Tasks;
-    using MagicPot.Backend.Services;
+    using MagicPot.Backend.Services.Api;
     using Microsoft.AspNetCore.Http;
     using Microsoft.Extensions.DependencyInjection;
 

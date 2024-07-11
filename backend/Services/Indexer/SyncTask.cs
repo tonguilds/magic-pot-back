@@ -1,5 +1,6 @@
-﻿namespace MagicPot.Backend.Services
+﻿namespace MagicPot.Backend.Services.Indexer
 {
+    using MagicPot.Backend.Data;
     using RecurrentTasks;
 
     public class SyncTask(IDbProvider dbProvider, BlockchainReader blockchainReader)

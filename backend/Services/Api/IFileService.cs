@@ -1,4 +1,4 @@
-﻿namespace MagicPot.Backend.Services
+﻿namespace MagicPot.Backend.Services.Api
 {
     public interface IFileService
     {

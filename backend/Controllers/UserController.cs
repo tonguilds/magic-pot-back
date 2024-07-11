@@ -15,7 +15,7 @@
     public class UserController(IDbProvider dbProvider, ILogger<UserController> logger) : ControllerBase
     {
         /// <summary>
-        /// Return some information about current user.
+        /// Returns some information about current user.
         /// </summary>
         /// <param name="initData">Telegram InitData string.</param>
         /// <returns><see cref="UserInfo"/> data.</returns>
@@ -33,26 +33,7 @@
 
             var tgUser = InitDataValidationAttribute.GetUserDataWithoutValidation(initData);
 
-            var user = dbProvider.MainDb.Find<User>(tgUser.Id);
-
-            if (user == null)
-            {
-                user = new User()
-                {
-                    Id = tgUser.Id,
-                    Username = tgUser.Username,
-                    Referrer = null,
-                    Created = DateTimeOffset.UtcNow,
-                    Points = 0,
-                };
-
-                dbProvider.MainDb.Insert(user);
-            }
-            else if (!StringComparer.Ordinal.Equals(user.Username, tgUser.Username))
-            {
-                user.Username = tgUser.Username;
-                dbProvider.MainDb.Update(user);
-            }
+            var user = dbProvider.GetOrCreateUser(tgUser.Id, tgUser.Username);
 
             return new UserInfo
             {
@@ -69,7 +50,7 @@
         /// <param name="refCode">Alphanumeric ref code of other user (referrer).</param>
         /// <returns><see cref="CreateUserResult"/> data.</returns>
         /// <remarks>
-        /// Does nothing when user already exists, so it's OK to call it on every <b>/start</b> command.
+        /// Does nothing when user already exist, so it's OK to call it on every <b>/start</b> command.
         /// </remarks>
         [HttpPost]
         public ActionResult<CreateUserResult> CreateNew(
