@@ -48,6 +48,9 @@
 
             services.AddTask<StartupTask>(o => o.AutoStart(StartupTask.Interval, TimeSpan.FromSeconds(3)));
 
+            services.Configure<BackupOptions>(configuration.GetSection("BackupOptions"));
+            services.AddTask<BackupTask>(o => o.AutoStart = true);
+
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen(o =>
             {
@@ -78,6 +81,7 @@
                     typeof(ITask<CachedData>),
                     typeof(ITask<IndexerControlTask>),
                     typeof(ITask<StartupTask>),
+                    typeof(ITask<BackupTask>),
                 ];
         }
 

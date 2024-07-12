@@ -289,6 +289,8 @@
 
             db.Insert(pot);
 
+            HttpContext.RequestServices.GetRequiredService<RecurrentTasks.ITask<BackupTask>>().TryRunImmediately();
+
             return pot;
         }
 
