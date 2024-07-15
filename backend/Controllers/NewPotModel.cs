@@ -57,7 +57,7 @@
         /// <summary>
         /// Transaction grow ratio for 'increasing', or 0 (zero) for 'fixed'.
         /// </summary>
-        [Range(0.1, 100, ConvertValueInInvariantCulture = true)]
+        [Range(0, 1000, ConvertValueInInvariantCulture = true)]
         public decimal IncreasingTransactionPercentage { get; set; }
 
         /// <summary>
