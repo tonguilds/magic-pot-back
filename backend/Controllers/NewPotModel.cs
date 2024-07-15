@@ -23,20 +23,12 @@
         public string Name { get; set; } = string.Empty;
 
         /// <summary>
-        /// Token name (from predefined list of well-known tokens).
-        /// </summary>
-        /// <remarks>
-        /// <para>Either Token Name, or Token Address must be specified, not both.</para>
-        /// </remarks>
-        [MaxLength(DbProvider.MaxLenName)]
-        public string? TokenName { get; set; }
-
-        /// <summary>
         /// Token address (address of Jetton Master contract).
         /// </summary>
         /// <remarks>
         /// <para>Either Token Name, or Token Address must be specified, not both.</para>
         /// </remarks>
+        [Required(AllowEmptyStrings = false)]
         [MaxLength(DbProvider.MaxLenAddress)]
         [TonAddress]
         public string? TokenAddress { get; set; }
@@ -100,13 +92,6 @@
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
-            var tokenOk = string.IsNullOrEmpty(TokenName) != string.IsNullOrEmpty(TokenAddress);
-            if (!tokenOk)
-            {
-                yield return new ValidationResult(Messages.TokenNameOrAddressRequired, [nameof(TokenName)]);
-                yield return new ValidationResult(Messages.TokenNameOrAddressRequired, [nameof(TokenAddress)]);
-            }
-
             var sharesSum = FinalTransactionPercent + PreFinalTransactionsPercent + ReferralsPercent + CreatorPercent + BurnPercent;
             var sharesOk = sharesSum == 100;
 

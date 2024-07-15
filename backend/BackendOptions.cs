@@ -18,8 +18,6 @@
 
         public TimeSpan TelegramInitDataValidity { get; set; } = TimeSpan.FromHours(1);
 
-        public Dictionary<string, string> WellKnownJettons { get; private set; } = new(StringComparer.OrdinalIgnoreCase);
-
         public string TelegramBotToken { get; set; } = string.Empty;
     }
 }

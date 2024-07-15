@@ -46,8 +46,6 @@
             services.AddHttpClient<IFileService, PinataService>()
                 .AddTransientHttpErrorPolicy(p => p.WaitAndRetryAsync(3, _ => TimeSpan.FromSeconds(1)));
 
-            services.AddTask<StartupTask>(o => o.AutoStart(StartupTask.Interval, TimeSpan.FromSeconds(3)));
-
             services.Configure<BackupOptions>(configuration.GetSection("BackupOptions"));
             services.AddTask<BackupTask>(o => o.AutoStart = true);
 
@@ -80,7 +78,6 @@
                 [
                     typeof(ITask<CachedData>),
                     typeof(ITask<IndexerControlTask>),
-                    typeof(ITask<StartupTask>),
                     typeof(ITask<BackupTask>),
                 ];
         }

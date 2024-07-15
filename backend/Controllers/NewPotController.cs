@@ -96,20 +96,8 @@
 
         protected async Task<(Jetton? Jetton, string? UserJettonWallet)> ValidateJetton(NewPotModel model)
         {
-            if (!string.IsNullOrWhiteSpace(model.TokenName))
-            {
-                if (!cachedData.Options.WellKnownJettons.TryGetValue(model.TokenName, out var adr))
-                {
-                    ModelState.AddModelError(nameof(model.TokenName), Messages.UnknownTokenName);
-                    return (null, null);
-                }
-
-                model.TokenAddress = adr;
-            }
-
             if (string.IsNullOrWhiteSpace(model.TokenAddress))
             {
-                ModelState.AddModelError(nameof(model.TokenAddress), Messages.TokenNameOrAddressRequired);
                 return (null, null);
             }
 
