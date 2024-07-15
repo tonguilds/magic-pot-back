@@ -95,7 +95,7 @@
         public decimal TxSizeNext { get; set; }
 
         [NotNull]
-        public decimal TxSizeIncrease { get; set; }
+        public uint TxSizeIncrease { get; set; }
 
         [NotNull]
         public uint FinalTxPercent { get; set; }

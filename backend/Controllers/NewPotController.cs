@@ -251,7 +251,7 @@
                 Created = DateTimeOffset.UtcNow,
                 Countdown = TimeSpan.FromMinutes(model.CountdownTimerMinutes),
                 TxSizeNext = model.TransactionSize,
-                TxSizeIncrease = model.IncreasingTransactionPercentage / 100,
+                TxSizeIncrease = model.IncreasingTransactionPercentage,
                 FinalTxPercent = model.FinalTransactionPercent,
                 PreFinalTxPercent = model.PreFinalTransactionsPercent,
                 PreFinalTxCount = model.PreFinalTransactionsCount,

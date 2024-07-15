@@ -55,10 +55,10 @@
         public int TransactionSize { get; set; }
 
         /// <summary>
-        /// Transaction grow ratio for 'increasing', or 0 (zero) for 'fixed'.
+        /// Transaction grow ratio for 'increasing' (in percents), or 0 (zero) for 'fixed'.
         /// </summary>
-        [Range(0, 1000, ConvertValueInInvariantCulture = true)]
-        public decimal IncreasingTransactionPercentage { get; set; }
+        [Range(0, 9999, ConvertValueInInvariantCulture = true)]
+        public uint IncreasingTransactionPercentage { get; set; }
 
         /// <summary>
         /// Percentage of prize that winner will receive, or 0 (zero) to recieve nothing.
