@@ -11,7 +11,6 @@
     using SixLabors.ImageSharp;
     using Swashbuckle.AspNetCore.Annotations;
     using TonLibDotNet;
-    using TonLibDotNet.Cells;
 
     [ApiController]
     [Produces(MediaTypeNames.Application.Json)]
@@ -21,7 +20,8 @@
         CachedData cachedData,
         Lazy<IDbProvider> lazyDbProvider,
         ILogger<NewPotController> logger,
-        IFileService fileService)
+        IFileService fileService,
+        NotificationService notificationService)
         : ControllerBase
     {
         private const int MaxRetries = 100;
@@ -123,7 +123,7 @@
                     logger.LogInformation("New Jetton saved: {Symbox} {Address} ({Name})", jetton.Symbol, jetton.Address, jetton.Name);
                 }
 
-                HttpContext.ReloadCachedData();
+                notificationService.TryRun<CachedData>();
             }
 
             if (string.IsNullOrWhiteSpace(model.UserAddress))
@@ -143,6 +143,8 @@
                 };
 
                 db.Insert(ujw);
+
+                notificationService.TryRun<Services.Indexer.DetectUserJettonAddressesTask>();
             }
 
             if (string.IsNullOrWhiteSpace(ujw.JettonWallet))
@@ -277,7 +279,9 @@
 
             db.Insert(pot);
 
-            HttpContext.RequestServices.GetRequiredService<RecurrentTasks.ITask<BackupTask>>().TryRunImmediately();
+            notificationService.TryRun<BackupTask>();
+            notificationService.TryRun<Services.Indexer.PotUpdateTask>();
+            notificationService.TryRun<Services.Indexer.PrecacheMnemonicsTask>();
 
             return pot;
         }

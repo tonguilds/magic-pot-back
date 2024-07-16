@@ -10,8 +10,6 @@
 
         public TimeSpan CacheReloadInterval { get; set; } = TimeSpan.FromMinutes(15);
 
-        public PathString SearchCacheUpdatePath { get; set; } = "/update-search-cache";
-
         public PathString HealthReportPath { get; set; } = "/update-indexer-health-data";
 
         public TimeSpan IndexerSubprocessRestartInterval { get; set; } = TimeSpan.FromHours(2);

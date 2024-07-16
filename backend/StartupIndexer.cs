@@ -34,6 +34,8 @@
             services.Configure<TonOptions>(o => o.Options.KeystoreType = new KeyStoreTypeDirectory(dir));
             services.AddSingleton<ITonClient, TonClient>();
 
+            services.AddSingleton<NotificationService>();
+
             services.AddScoped<BlockchainReader>();
 
             services.AddTask<HealthReportTask>(o => o.AutoStart(HealthReportTask.DefaultInterval, TimeSpan.FromSeconds(3)));

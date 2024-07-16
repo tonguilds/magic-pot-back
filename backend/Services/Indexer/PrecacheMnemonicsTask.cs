@@ -1,6 +1,5 @@
 ﻿namespace MagicPot.Backend.Services.Indexer
 {
-    using MagicPot.Backend;
     using MagicPot.Backend.Data;
     using MagicPot.Backend.Utils;
     using RecurrentTasks;

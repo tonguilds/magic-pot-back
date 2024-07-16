@@ -16,7 +16,6 @@
         {
             services.AddSingleton<RobotsTxtMiddleware>();
             services.AddSingleton<HealthMiddleware>();
-            services.AddSingleton<CachedDataUpdateMiddleware>();
             services.AddSingleton<IndexerHealthUpdateMiddleware>();
 
             services
@@ -48,6 +47,8 @@
 
             services.Configure<BackupOptions>(configuration.GetSection("BackupOptions"));
             services.AddTask<BackupTask>(o => o.AutoStart = true);
+
+            services.AddSingleton<NotificationService>();
 
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen(o =>
@@ -82,7 +83,7 @@
                 ];
         }
 
-        public void Configure(IApplicationBuilder app)
+        public void Configure(IApplicationBuilder app, NotificationService notificationService)
         {
             app.UseForwardedHeaders(new() { ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.All });
             app.UseStatusCodePages();
@@ -95,7 +96,6 @@
 
             app.UseMiddleware<RobotsTxtMiddleware>();
             app.UseMiddleware<HealthMiddleware>();
-            app.UseMiddleware<CachedDataUpdateMiddleware>();
             app.UseMiddleware<IndexerHealthUpdateMiddleware>();
 
             app.UseSwagger();

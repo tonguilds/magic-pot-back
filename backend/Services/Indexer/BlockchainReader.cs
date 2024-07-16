@@ -2,7 +2,6 @@
 {
     using System.Diagnostics.CodeAnalysis;
     using System.Numerics;
-    using MagicPot.Backend;
     using MagicPot.Backend.Data;
     using MagicPot.Backend.Utils;
     using TonLibDotNet;
