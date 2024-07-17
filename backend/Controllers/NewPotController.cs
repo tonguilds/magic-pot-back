@@ -17,7 +17,6 @@
     [Route("/api/[controller]/[action]")]
     [SwaggerResponse(200, "Request is accepted, processed and response contains requested data.")]
     public class NewPotController(
-        CachedData cachedData,
         Lazy<IDbProvider> lazyDbProvider,
         ILogger<NewPotController> logger,
         IFileService fileService,
@@ -27,6 +26,12 @@
         private const int MaxRetries = 100;
         private static readonly Random Rand = new();
 
+        /// <summary>
+        /// Checks new pot data (without creating when no errors found).
+        /// </summary>
+        /// <param name="initData">Value of <see href="https://core.telegram.org/bots/webapps#initializing-mini-apps">initData</see> Telegram property.</param>
+        /// <param name="model">Pot parameters.</param>
+        /// <returns>Check result: status and list of errors.</returns>
         [HttpPost]
         [Consumes(MediaTypeNames.Application.Json)]
         public async Task<CheckResult> CheckNewPotAsJson(
@@ -39,6 +44,13 @@
             return ModelState.IsValid ? new CheckResult(true, null) : new CheckResult(false, new ValidationProblemDetails(ModelState).Errors);
         }
 
+        /// <summary>
+        /// Checks new pot data (without creating when no errors found).
+        /// </summary>
+        /// <param name="initData">Value of <see href="https://core.telegram.org/bots/webapps#initializing-mini-apps">initData</see> Telegram property.</param>
+        /// <param name="model">Pot parameters.</param>
+        /// <param name="coverImage">Pot cover image.</param>
+        /// <returns>Check result: status and list of errors.</returns>
         [HttpPost]
         [Consumes(MediaTypeNames.Multipart.FormData)]
         public async Task<CheckResult> CheckNewPotAsForm(
@@ -52,6 +64,12 @@
             return ModelState.IsValid ? new CheckResult(true, null) : new CheckResult(false, new ValidationProblemDetails(ModelState).Errors);
         }
 
+        /// <summary>
+        /// Checks new pot data, and creates new pot when no errors found.
+        /// </summary>
+        /// <param name="initData">Value of <see href="https://core.telegram.org/bots/webapps#initializing-mini-apps">initData</see> Telegram property.</param>
+        /// <param name="model">Pot parameters.</param>
+        /// <returns>Pot string key (for future usage) and transaction data for user to send initial prize.</returns>
         [HttpPost]
         [Consumes(MediaTypeNames.Application.Json)]
         public async Task<ActionResult<NewPotInfo>> CreateNewPotAsJson(
@@ -63,6 +81,13 @@
             return await CreateNewPot(initData, model, ms);
         }
 
+        /// <summary>
+        /// Checks new pot data, and creates new pot when no errors found.
+        /// </summary>
+        /// <param name="initData">Value of <see href="https://core.telegram.org/bots/webapps#initializing-mini-apps">initData</see> Telegram property.</param>
+        /// <param name="model">Pot parameters.</param>
+        /// <param name="coverImage">Pot cover image.</param>
+        /// <returns>Pot string key (for future usage) and transaction data for user to send initial prize.</returns>
         [HttpPost]
         [Consumes(MediaTypeNames.Multipart.FormData)]
         public async Task<ActionResult<NewPotInfo>> CreateNewPotAsForm(
@@ -73,6 +98,72 @@
             using var ms = await ValidateCoverImage(null, coverImage, nameof(coverImage));
 
             return await CreateNewPot(initData, model, ms);
+        }
+
+        /// <summary>
+        /// Re-creates transaction data for sending prize to pot (returns same result as CreateNewPotXxx, but for existing pot).
+        /// </summary>
+        /// <param name="initData">Value of <see href="https://core.telegram.org/bots/webapps#initializing-mini-apps">initData</see> Telegram property.</param>
+        /// <param name="key">Pot key.</param>
+        /// <returns>Pot string key (for future usage) and transaction data for user to send initial prize.</returns>
+        [HttpPost]
+        [Consumes(MediaTypeNames.Application.Json)]
+        public ActionResult<NewPotInfo> GetSendPrizeTransactionData(
+            [Required, InitDataValidation, FromHeader(Name = BackendOptions.TelegramInitDataHeaderName)] string initData,
+            [Required(AllowEmptyStrings = false)] string key)
+        {
+            if (!ModelState.IsValid)
+            {
+                return new BadRequestObjectResult(new ValidationProblemDetails(ModelState));
+            }
+
+            var tgUser = InitDataValidationAttribute.GetUserDataWithoutValidation(initData);
+            var db = lazyDbProvider.Value.MainDb;
+            var pot = db.Find<Pot>(x => x.OwnerUserId == tgUser.Id && x.Key == key);
+            if (pot == null)
+            {
+                return NotFound();
+            }
+
+            var jetton = db.Get<Jetton>(x => x.Address == pot.JettonMaster);
+            var ujw = db.Get<UserJettonWallet>(x => x.MainWallet == pot.OwnerUserAddress && x.JettonMaster == pot.Address);
+            var txInfo = PrepareTxInfo(pot, jetton, ujw.JettonWallet!);
+
+            return new NewPotInfo(pot.Key, txInfo.RawAddress, txInfo.Amount, txInfo.Payload);
+        }
+
+        /// <summary>
+        /// [Re]activates watching for new transactions to Pot address (after successful sending tx ffrom TON Connect).
+        /// </summary>
+        /// <param name="initData">Value of <see href="https://core.telegram.org/bots/webapps#initializing-mini-apps">initData</see> Telegram property.</param>
+        /// <param name="key">Pot key.</param>
+        /// <param name="boc">BOC from TON Connect after successful transaction execution.</param>
+        [HttpPost]
+        [Consumes(MediaTypeNames.Application.Json)]
+        public ActionResult WaitForPrizeTransaction(
+            [Required, InitDataValidation, FromHeader(Name = BackendOptions.TelegramInitDataHeaderName)] string initData,
+            [Required(AllowEmptyStrings = false)] string key,
+            [Required(AllowEmptyStrings = false)] string boc)
+        {
+            if (!ModelState.IsValid)
+            {
+                return new BadRequestObjectResult(new ValidationProblemDetails(ModelState));
+            }
+
+            var tgUser = InitDataValidationAttribute.GetUserDataWithoutValidation(initData);
+            var db = lazyDbProvider.Value.MainDb;
+            var pot = db.Find<Pot>(x => x.OwnerUserId == tgUser.Id && x.Key == key);
+            if (pot == null)
+            {
+                return NotFound();
+            }
+
+            pot.Touch();
+            db.Update(pot);
+
+            notificationService.TryRun<Services.Indexer.PotUpdateTask>();
+
+            return Ok();
         }
 
         protected async Task<ActionResult<NewPotInfo>> CreateNewPot(string initData, NewPotModel model, MemoryStream? coverImage)
