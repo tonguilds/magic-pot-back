@@ -254,11 +254,12 @@
                 Countdown = TimeSpan.FromMinutes(model.CountdownTimerMinutes),
                 TxSizeNext = model.TransactionSize,
                 TxSizeIncrease = model.IncreasingTransactionPercentage,
-                FinalTxPercent = model.FinalTransactionPercent,
-                PreFinalTxPercent = model.PreFinalTransactionsPercent,
-                PreFinalTxCount = model.PreFinalTransactionsCount,
-                ReferralsPercent = model.ReferralsPercent,
                 CreatorPercent = model.CreatorPercent,
+                LastTxPercent = model.LastTransactionsPercent,
+                LastTxCount = model.LastTransactionsCount,
+                RandomTxPercent = model.RandomTransactionsPercent,
+                RandomTxCount = model.RandomTransactionsCount,
+                ReferralsPercent = model.ReferralsPercent,
                 BurnPercent = model.BurnPercent,
             };
 

@@ -31,28 +31,28 @@
         [Required(AllowEmptyStrings = false)]
         [MaxLength(DbProvider.MaxLenAddress)]
         [TonAddress]
-        public string? TokenAddress { get; set; }
+        public string TokenAddress { get; set; } = string.Empty;
 
         /// <summary>
         /// Initial pot size.
         /// </summary>
         [Required]
         [Range(1, 1_000_000_000, ConvertValueInInvariantCulture = true)]
-        public int InitialSize { get; set; }
+        public uint InitialSize { get; set; }
 
         /// <summary>
         /// Countdown time (in minutes).
         /// </summary>
         [Required]
-        [Range(1, 60 * 24, ConvertValueInInvariantCulture = true)]
-        public int CountdownTimerMinutes { get; set; }
+        [Range(1, 5999, ConvertValueInInvariantCulture = true)] // max 99H 59min
+        public uint CountdownTimerMinutes { get; set; }
 
         /// <summary>
         /// Transaction size.
         /// </summary>
         [Required]
         [Range(1, 1_000_000_000, ConvertValueInInvariantCulture = true)]
-        public int TransactionSize { get; set; }
+        public decimal TransactionSize { get; set; }
 
         /// <summary>
         /// Transaction grow ratio for 'increasing' (in percents), or 0 (zero) for 'fixed'.
@@ -61,110 +61,88 @@
         public uint IncreasingTransactionPercentage { get; set; }
 
         /// <summary>
-        /// Percentage of prize that winner will receive, or 0 (zero) to recieve nothing.
+        /// Percentage of prize that creator will receive, or 0 (zero) to recieve nothing.
         /// </summary>
-        public uint FinalTransactionPercent { get; set; }
+        [Range(0, 100, ConvertValueInInvariantCulture = true)]
+        public uint CreatorPercent { get; set; }
 
         /// <summary>
         /// Percentage of prize that last X of transactions will share, or 0 (zero) to share nothing.
         /// </summary>
-        public uint PreFinalTransactionsPercent { get; set; }
+        [Range(0, 100, ConvertValueInInvariantCulture = true)]
+        public uint LastTransactionsPercent { get; set; }
 
         /// <summary>
-        /// Number of last transactions that will share prize. Must be set only when <see cref="PreFinalTransactionsPercent">PreFinalTransactionsPercent</see> is set.
+        /// Number of last transactions that will share prize. Must be set only when <see cref="LastTransactionsPercent">LastTransactionsPercent</see> is set.
         /// </summary>
-        public uint PreFinalTransactionsCount { get; set; }
+        [Range(0, 99, ConvertValueInInvariantCulture = true)]
+        public uint LastTransactionsCount { get; set; }
+
+        /// <summary>
+        /// Percentage of prize that X of random transactions will share, or 0 (zero) to share nothing.
+        /// </summary>
+        [Range(0, 100, ConvertValueInInvariantCulture = true)]
+        public uint RandomTransactionsPercent { get; set; }
+
+        /// <summary>
+        /// Number of random transactions that will share prize. Must be set only when <see cref="RandomTransactionsPercent">RandomTransactionsPercent</see> is set.
+        /// </summary>
+        [Range(0, 99, ConvertValueInInvariantCulture = true)]
+        public uint RandomTransactionsCount { get; set; }
 
         /// <summary>
         /// Percentage of prize that referrals of winners will receive, or 0 (zero) to recieve nothing.
         /// </summary>
+        [Range(0, 100, ConvertValueInInvariantCulture = true)]
         public uint ReferralsPercent { get; set; }
-
-        /// <summary>
-        /// Percentage of prize that creator will receive, or 0 (zero) to recieve nothing.
-        /// </summary>
-        public uint CreatorPercent { get; set; }
 
         /// <summary>
         /// Percentage of prize that will be burned, or 0 (zero) to burn nothing.
         /// </summary>
+        [Range(0, 100, ConvertValueInInvariantCulture = true)]
         public uint BurnPercent { get; set; }
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
-            var sharesSum = FinalTransactionPercent + PreFinalTransactionsPercent + ReferralsPercent + CreatorPercent + BurnPercent;
+            var sharesSum = CreatorPercent + LastTransactionsCount + RandomTransactionsPercent + ReferralsPercent + BurnPercent;
             var sharesOk = sharesSum == 100;
 
-            if (FinalTransactionPercent > 0 || sharesSum == 0)
+            if (!sharesOk)
             {
-                if (FinalTransactionPercent > 100)
-                {
-                    yield return new ValidationResult(Messages.MaxAllowedValueIs100, [nameof(FinalTransactionPercent)]);
-                }
-                else if (!sharesOk)
-                {
-                    yield return new ValidationResult(Messages.SumOfSharesMustBe100, [nameof(FinalTransactionPercent)]);
-                }
-            }
-
-            if (PreFinalTransactionsPercent > 0)
-            {
-                if (PreFinalTransactionsPercent > 100)
-                {
-                    yield return new ValidationResult(Messages.MaxAllowedValueIs100, [nameof(PreFinalTransactionsPercent)]);
-                }
-                else if (!sharesOk)
-                {
-                    yield return new ValidationResult(Messages.SumOfSharesMustBe100, [nameof(PreFinalTransactionsPercent)]);
-                }
-
-                if (PreFinalTransactionsCount == 0)
-                {
-                    yield return new ValidationResult(Messages.MustBeNonZero, [nameof(PreFinalTransactionsCount)]);
-                }
-            }
-            else
-            {
-                if (PreFinalTransactionsCount > 0)
-                {
-                    yield return new ValidationResult(Messages.MustBeZero, [nameof(PreFinalTransactionsCount)]);
-                }
-            }
-
-            if (ReferralsPercent > 0)
-            {
-                if (ReferralsPercent > 100)
-                {
-                    yield return new ValidationResult(Messages.MaxAllowedValueIs100, [nameof(ReferralsPercent)]);
-                }
-                else if (!sharesOk)
-                {
-                    yield return new ValidationResult(Messages.SumOfSharesMustBe100, [nameof(ReferralsPercent)]);
-                }
-            }
-
-            if (CreatorPercent > 0)
-            {
-                if (CreatorPercent > 100)
-                {
-                    yield return new ValidationResult(Messages.MaxAllowedValueIs100, [nameof(CreatorPercent)]);
-                }
-                else if (!sharesOk)
+                if (CreatorPercent > 0 || sharesSum == 0)
                 {
                     yield return new ValidationResult(Messages.SumOfSharesMustBe100, [nameof(CreatorPercent)]);
                 }
-            }
 
-            if (BurnPercent > 0)
-            {
-                if (BurnPercent > 100)
+                if (LastTransactionsPercent > 0 || sharesSum == 0)
                 {
-                    yield return new ValidationResult(Messages.MaxAllowedValueIs100, [nameof(BurnPercent)]);
+                    yield return new ValidationResult(Messages.SumOfSharesMustBe100, [nameof(LastTransactionsPercent)]);
                 }
-                else if (!sharesOk)
+
+                if (RandomTransactionsPercent > 0 || sharesSum == 0)
+                {
+                    yield return new ValidationResult(Messages.SumOfSharesMustBe100, [nameof(RandomTransactionsPercent)]);
+                }
+
+                if (ReferralsPercent > 0 || sharesSum == 0)
+                {
+                    yield return new ValidationResult(Messages.SumOfSharesMustBe100, [nameof(ReferralsPercent)]);
+                }
+
+                if (BurnPercent > 0 || sharesSum == 0)
                 {
                     yield return new ValidationResult(Messages.SumOfSharesMustBe100, [nameof(BurnPercent)]);
                 }
+            }
+
+            if (LastTransactionsPercent > 0 && LastTransactionsCount == 0)
+            {
+                yield return new ValidationResult(Messages.MustBeNonZero, [nameof(LastTransactionsCount)]);
+            }
+
+            if (RandomTransactionsPercent > 0 && RandomTransactionsCount == 0)
+            {
+                yield return new ValidationResult(Messages.MustBeNonZero, [nameof(RandomTransactionsCount)]);
             }
         }
     }

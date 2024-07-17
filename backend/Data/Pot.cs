@@ -98,19 +98,22 @@
         public uint TxSizeIncrease { get; set; }
 
         [NotNull]
-        public uint FinalTxPercent { get; set; }
+        public uint CreatorPercent { get; set; }
 
         [NotNull]
-        public uint PreFinalTxPercent { get; set; }
+        public uint LastTxPercent { get; set; }
 
         [NotNull]
-        public uint PreFinalTxCount { get; set; }
+        public uint LastTxCount { get; set; }
+
+        [NotNull]
+        public uint RandomTxPercent { get; set; }
+
+        [NotNull]
+        public uint RandomTxCount { get; set; }
 
         [NotNull]
         public uint ReferralsPercent { get; set; }
-
-        [NotNull]
-        public uint CreatorPercent { get; set; }
 
         [NotNull]
         public uint BurnPercent { get; set; }
