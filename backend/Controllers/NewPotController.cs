@@ -177,7 +177,7 @@
 
             var tgUser = InitDataValidationAttribute.GetUserDataWithoutValidation(initData);
 
-            var user = lazyDbProvider.Value.GetOrCreateUser(tgUser.Id, tgUser.Username);
+            var user = lazyDbProvider.Value.GetOrCreateUser(tgUser);
 
             var pot = await CreatePot(model, user.Id, jetton!.Address, coverImage);
             var txInfo = PrepareTxInfo(pot, jetton, userJettonAddress!);

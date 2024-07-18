@@ -33,7 +33,7 @@
 
             var tgUser = InitDataValidationAttribute.GetUserDataWithoutValidation(initData);
 
-            var user = dbProvider.GetOrCreateUser(tgUser.Id, tgUser.Username);
+            var user = dbProvider.GetOrCreateUser(tgUser);
 
             return new UserInfo
             {
@@ -73,6 +73,11 @@
             {
                 Id = tgUser.Id,
                 Username = tgUser.Username,
+                FirstName = tgUser.FirstName,
+                LastName = tgUser.LastName,
+                LanguageCode = tgUser.LanguageCode,
+                IsPremium = tgUser.IsPremium,
+                AllowsWriteToPM = tgUser.AllowsWriteToPM,
                 Referrer = Base36.TryDecodeLong(refCode),
                 Created = DateTimeOffset.UtcNow,
                 Points = 0,

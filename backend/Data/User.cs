@@ -10,6 +10,19 @@
         [MaxLength(DbProvider.MaxLen255)]
         public string? Username { get; set; }
 
+        [MaxLength(DbProvider.MaxLen255)]
+        public string? FirstName { get; set; }
+
+        [MaxLength(DbProvider.MaxLen255)]
+        public string? LastName { get; set; }
+
+        [MaxLength(DbProvider.MaxLen255)]
+        public string? LanguageCode { get; set; }
+
+        public bool IsPremium { get; set; }
+
+        public bool AllowsWriteToPM { get; set; }
+
         [Indexed]
         public long? Referrer { get; set; }
 

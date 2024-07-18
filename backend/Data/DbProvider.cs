@@ -55,28 +55,40 @@
             olddb.Close();
         }
 
-        public User GetOrCreateUser(long id, string username)
+        public User GetOrCreateUser(long id, string? username, string? firstName, string? lastName, string? languageCode, bool isPremium, bool allowsWriteToPM)
         {
             var user = MainDb.Find<User>(id);
 
-            if (user == null)
-            {
-                user = new User()
-                {
-                    Id = id,
-                    Username = username,
-                    Created = DateTimeOffset.UtcNow,
-                };
+            var unchanged = user != null;
 
-                MainDb.Insert(user);
-            }
-            else if (!StringComparer.Ordinal.Equals(user.Username, username))
+            user ??= new User() { Id = id, Created = DateTimeOffset.UtcNow };
+
+            unchanged = unchanged
+                && StringComparer.Ordinal.Equals(user.Username, username)
+                && StringComparer.Ordinal.Equals(user.FirstName, firstName)
+                && StringComparer.Ordinal.Equals(user.LastName, lastName)
+                && StringComparer.Ordinal.Equals(user.LanguageCode, languageCode)
+                && StringComparer.Ordinal.Equals(user.Username, username)
+                && user.IsPremium == isPremium
+                && user.AllowsWriteToPM == allowsWriteToPM;
+
+            if (!unchanged)
             {
                 user.Username = username;
-                MainDb.Update(user);
+                user.FirstName = firstName;
+                user.LastName = lastName;
+                user.LanguageCode = languageCode;
+                user.IsPremium = isPremium;
+                user.AllowsWriteToPM = allowsWriteToPM;
+                MainDb.InsertOrReplace(user);
             }
 
             return user;
+        }
+
+        public User GetOrCreateUser(Attributes.InitDataValidationAttribute.InitDataUser user)
+        {
+            return GetOrCreateUser(user.Id, user.Username, user.FirstName, user.LastName, user.LanguageCode, user.IsPremium, user.AllowsWriteToPM);
         }
 
         public void Dispose()
