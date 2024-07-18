@@ -35,7 +35,7 @@
         [HttpPost]
         [Consumes(MediaTypeNames.Application.Json)]
         public async Task<CheckResult> CheckNewPotAsJson(
-            [Required, InitDataValidation, FromHeader(Name = BackendOptions.TelegramInitDataHeaderName)] string initData,
+            [Required(AllowEmptyStrings = false), InitDataValidation, FromHeader(Name = BackendOptions.TelegramInitDataHeaderName)] string initData,
             [Required] NewPotWithCoverModel model)
         {
             await ValidateJetton(model);
@@ -54,8 +54,8 @@
         [HttpPost]
         [Consumes(MediaTypeNames.Multipart.FormData)]
         public async Task<CheckResult> CheckNewPotAsForm(
-            [Required, InitDataValidation, FromHeader(Name = BackendOptions.TelegramInitDataHeaderName)] string initData,
-            [Required][FromForm] NewPotModel model,
+            [Required(AllowEmptyStrings = false), InitDataValidation, FromHeader(Name = BackendOptions.TelegramInitDataHeaderName)] string initData,
+            [Required, FromForm] NewPotModel model,
             IFormFile? coverImage)
         {
             await ValidateJetton(model);
@@ -73,7 +73,7 @@
         [HttpPost]
         [Consumes(MediaTypeNames.Application.Json)]
         public async Task<ActionResult<NewPotInfo>> CreateNewPotAsJson(
-            [Required, InitDataValidation, FromHeader(Name = BackendOptions.TelegramInitDataHeaderName)] string initData,
+            [Required(AllowEmptyStrings = false), InitDataValidation, FromHeader(Name = BackendOptions.TelegramInitDataHeaderName)] string initData,
             [Required] NewPotWithCoverModel model)
         {
             using var ms = await ValidateCoverImage(model.CoverImage, null, nameof(model.CoverImage));
@@ -91,8 +91,8 @@
         [HttpPost]
         [Consumes(MediaTypeNames.Multipart.FormData)]
         public async Task<ActionResult<NewPotInfo>> CreateNewPotAsForm(
-            [Required, InitDataValidation, FromHeader(Name = BackendOptions.TelegramInitDataHeaderName)] string initData,
-            [Required][FromForm] NewPotModel model,
+            [Required(AllowEmptyStrings = false), InitDataValidation, FromHeader(Name = BackendOptions.TelegramInitDataHeaderName)] string initData,
+            [Required, FromForm] NewPotModel model,
             IFormFile? coverImage)
         {
             using var ms = await ValidateCoverImage(null, coverImage, nameof(coverImage));
@@ -109,7 +109,7 @@
         [HttpPost]
         [Consumes(MediaTypeNames.Application.Json)]
         public ActionResult<NewPotInfo> GetSendPrizeTransactionData(
-            [Required, InitDataValidation, FromHeader(Name = BackendOptions.TelegramInitDataHeaderName)] string initData,
+            [Required(AllowEmptyStrings = false), InitDataValidation, FromHeader(Name = BackendOptions.TelegramInitDataHeaderName)] string initData,
             [Required(AllowEmptyStrings = false)] string key)
         {
             if (!ModelState.IsValid)
@@ -141,7 +141,7 @@
         [HttpPost]
         [Consumes(MediaTypeNames.Application.Json)]
         public ActionResult WaitForPrizeTransaction(
-            [Required, InitDataValidation, FromHeader(Name = BackendOptions.TelegramInitDataHeaderName)] string initData,
+            [Required(AllowEmptyStrings = false), InitDataValidation, FromHeader(Name = BackendOptions.TelegramInitDataHeaderName)] string initData,
             [Required(AllowEmptyStrings = false)] string key,
             [Required(AllowEmptyStrings = false)] string boc)
         {
