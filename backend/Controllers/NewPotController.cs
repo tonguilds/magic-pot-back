@@ -345,13 +345,13 @@
                 Countdown = TimeSpan.FromMinutes(model.CountdownTimerMinutes),
                 TxSizeNext = model.TransactionSize,
                 TxSizeIncrease = model.IncreasingTransactionPercentage,
-                CreatorPercent = model.CreatorPercent,
-                LastTxPercent = model.LastTransactionsPercent,
-                LastTxCount = model.LastTransactionsCount,
-                RandomTxPercent = model.RandomTransactionsPercent,
-                RandomTxCount = model.RandomTransactionsCount,
-                ReferralsPercent = model.ReferralsPercent,
-                BurnPercent = model.BurnPercent,
+                CreatorPercent = model.CreatorPercent ?? 0,
+                LastTxPercent = model.LastTransactionsPercent ?? 0,
+                LastTxCount = model.LastTransactionsCount ?? 0,
+                RandomTxPercent = model.RandomTransactionsPercent ?? 0,
+                RandomTxCount = model.RandomTransactionsCount ?? 0,
+                ReferralsPercent = model.ReferralsPercent ?? 0,
+                BurnPercent = model.BurnPercent ?? 0,
             };
 
             pot.Key = Base36.Encode(pot.Id);

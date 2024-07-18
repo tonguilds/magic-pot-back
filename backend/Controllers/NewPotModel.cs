@@ -64,43 +64,43 @@
         /// Percentage of prize that creator will receive, or 0 (zero) to recieve nothing.
         /// </summary>
         [Range(0, 100, ConvertValueInInvariantCulture = true)]
-        public uint CreatorPercent { get; set; }
+        public uint? CreatorPercent { get; set; }
 
         /// <summary>
         /// Percentage of prize that last X of transactions will share, or 0 (zero) to share nothing.
         /// </summary>
         [Range(0, 100, ConvertValueInInvariantCulture = true)]
-        public uint LastTransactionsPercent { get; set; }
+        public uint? LastTransactionsPercent { get; set; }
 
         /// <summary>
         /// Number of last transactions that will share prize. Must be set only when <see cref="LastTransactionsPercent">LastTransactionsPercent</see> is set.
         /// </summary>
         [Range(0, 99, ConvertValueInInvariantCulture = true)]
-        public uint LastTransactionsCount { get; set; }
+        public uint? LastTransactionsCount { get; set; }
 
         /// <summary>
         /// Percentage of prize that X of random transactions will share, or 0 (zero) to share nothing.
         /// </summary>
         [Range(0, 100, ConvertValueInInvariantCulture = true)]
-        public uint RandomTransactionsPercent { get; set; }
+        public uint? RandomTransactionsPercent { get; set; }
 
         /// <summary>
         /// Number of random transactions that will share prize. Must be set only when <see cref="RandomTransactionsPercent">RandomTransactionsPercent</see> is set.
         /// </summary>
         [Range(0, 99, ConvertValueInInvariantCulture = true)]
-        public uint RandomTransactionsCount { get; set; }
+        public uint? RandomTransactionsCount { get; set; }
 
         /// <summary>
         /// Percentage of prize that referrals of winners will receive, or 0 (zero) to recieve nothing.
         /// </summary>
         [Range(0, 100, ConvertValueInInvariantCulture = true)]
-        public uint ReferralsPercent { get; set; }
+        public uint? ReferralsPercent { get; set; }
 
         /// <summary>
         /// Percentage of prize that will be burned, or 0 (zero) to burn nothing.
         /// </summary>
         [Range(0, 100, ConvertValueInInvariantCulture = true)]
-        public uint BurnPercent { get; set; }
+        public uint? BurnPercent { get; set; }
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
