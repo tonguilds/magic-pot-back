@@ -3,7 +3,7 @@
     using MagicPot.Backend.Data;
     using RecurrentTasks;
 
-    public class PotUpdateTask(ILogger<PotUpdateTask> logger, IDbProvider dbProvider, BlockchainReader blockchainReader) : IRunnable
+    public class PotUpdateTask(ILogger<PotUpdateTask> logger, IDbProvider dbProvider, BlockchainReader blockchainReader, NotificationService notificationService) : IRunnable
     {
         public static readonly TimeSpan DefaultInterval = TimeSpan.FromSeconds(5);
 
@@ -36,15 +36,21 @@
                     return;
                 }
 
-                await Update(pot).ConfigureAwait(false);
+                var changed = await Update(pot).ConfigureAwait(false);
 
                 pot.UpdateNextUpdate();
                 db.Update(pot);
+
+                if (changed)
+                {
+                    notificationService.TryRun<Api.CachedData>();
+                }
             }
         }
 
-        protected async Task Update(Pot pot)
+        protected async Task<bool> Update(Pot pot)
         {
+            var changed = false;
             var db = dbProvider.MainDb;
 
             if (string.IsNullOrWhiteSpace(pot.JettonWallet))
@@ -52,6 +58,7 @@
                 pot.JettonWallet = await blockchainReader.GetJettonWallet(pot.JettonMaster, pot.Address);
                 db.Update(pot);
                 logger.LogInformation("Got JettonWallet for pot {Key}: {Address}", pot.Key, pot.JettonWallet);
+                changed = true;
             }
 
             var jetton = dbProvider.MainDb.Get<Jetton>(x => x.Address == pot.JettonMaster);
@@ -59,7 +66,7 @@
             var haveNew = await blockchainReader.CheckNewPotTransactions(pot, jetton, dbProvider).ConfigureAwait(false);
             if (!haveNew)
             {
-                return;
+                return changed;
             }
 
             var list = db.Table<PotTransaction>()
@@ -92,7 +99,10 @@
 
                 pot.TotalSize += tx.Amount;
                 db.Update(pot);
+                changed = true;
             }
+
+            return changed;
         }
     }
 }

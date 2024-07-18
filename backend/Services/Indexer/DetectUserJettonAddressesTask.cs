@@ -3,7 +3,7 @@
     using MagicPot.Backend.Data;
     using RecurrentTasks;
 
-    public class DetectUserJettonAddressesTask(ILogger<DetectUserJettonAddressesTask> logger, IDbProvider dbProvider, BlockchainReader blockchainReader)
+    public class DetectUserJettonAddressesTask(ILogger<DetectUserJettonAddressesTask> logger, IDbProvider dbProvider, BlockchainReader blockchainReader, NotificationService notificationService)
         : IRunnable
     {
         public static readonly TimeSpan DefaultInterval = TimeSpan.FromSeconds(10);
@@ -12,6 +12,7 @@
 
         public async Task RunAsync(ITask currentTask, IServiceProvider scopeServiceProvider, CancellationToken cancellationToken)
         {
+            var changed = false;
             for (var i = 0; i < MaxBatch; i++)
             {
                 var item = dbProvider.MainDb.Find<UserJettonWallet>(x => x.JettonWallet == null);
@@ -23,6 +24,12 @@
                 item.JettonWallet = await blockchainReader.GetJettonWallet(item.JettonMaster, item.MainWallet);
                 dbProvider.MainDb.Update(item);
                 logger.LogDebug("Saved JettonWallet {Address} for user {Wallet} and jetton {Master}", item.JettonWallet, item.MainWallet, item.JettonMaster);
+                changed = true;
+            }
+
+            if (changed)
+            {
+                notificationService.TryRun<Api.CachedData>();
             }
         }
     }

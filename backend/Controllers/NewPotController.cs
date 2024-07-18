@@ -376,6 +376,7 @@
 
             db.Insert(pot);
 
+            notificationService.TryRun<CachedData>();
             notificationService.TryRun<BackupTask>();
             notificationService.TryRun<Services.Indexer.PotUpdateTask>();
             notificationService.TryRun<Services.Indexer.PrecacheMnemonicsTask>();
