@@ -133,7 +133,7 @@
         }
 
         /// <summary>
-        /// [Re]activates watching for new transactions to Pot address (after successful sending tx ffrom TON Connect).
+        /// [Re]activates watching for new transactions to Pot address (after successful sending tx from TON Connect).
         /// </summary>
         /// <param name="initData">Value of <see href="https://core.telegram.org/bots/webapps#initializing-mini-apps">initData</see> Telegram property.</param>
         /// <param name="key">Pot key.</param>
