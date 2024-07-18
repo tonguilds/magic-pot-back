@@ -38,6 +38,11 @@
             [Required(AllowEmptyStrings = false), InitDataValidation, FromHeader(Name = BackendOptions.TelegramInitDataHeaderName)] string initData,
             [Required] NewPotWithCoverModel model)
         {
+            if (!ModelState.IsValid)
+            {
+                return new CheckResult(false, new ValidationProblemDetails(ModelState).Errors);
+            }
+
             await ValidateJetton(model);
             using var ms = await ValidateCoverImage(model.CoverImage, null, nameof(model.CoverImage));
 
@@ -58,6 +63,11 @@
             [Required, FromForm] NewPotModel model,
             IFormFile? coverImage)
         {
+            if (!ModelState.IsValid)
+            {
+                return new CheckResult(false, new ValidationProblemDetails(ModelState).Errors);
+            }
+
             await ValidateJetton(model);
             using var ms = await ValidateCoverImage(null, coverImage, nameof(coverImage));
 
