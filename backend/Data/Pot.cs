@@ -88,6 +88,8 @@
 
         public DateTimeOffset? Stolen { get; set; }
 
+        public DateTimeOffset? Paid { get; set; }
+
         [NotNull]
         public TimeSpan Countdown { get; set; }
 
