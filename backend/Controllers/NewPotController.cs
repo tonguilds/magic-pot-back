@@ -168,6 +168,11 @@
 
         protected async Task<ActionResult<NewPotInfo>> CreateNewPot(string initData, NewPotModel model, MemoryStream? coverImage)
         {
+            if (!ModelState.IsValid)
+            {
+                return new BadRequestObjectResult(new ValidationProblemDetails(ModelState));
+            }
+
             var (jetton, userJettonAddress) = await ValidateJetton(model);
 
             if (!ModelState.IsValid)
