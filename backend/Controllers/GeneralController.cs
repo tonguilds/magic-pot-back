@@ -21,7 +21,8 @@
             return new BackendStatus
             {
                 InMainnet = Program.InMainnet,
-                KnownJettonCount = cachedData.KnownJettons.Count,
+                KnownJettonCount = cachedData.AllJettons.Count,
+                MasterchainSeqno = cachedData.LastKnownSeqno,
             };
         }
 
@@ -30,6 +31,8 @@
             public required bool InMainnet { get; set; }
 
             public required int KnownJettonCount { get; set; }
+
+            public required long MasterchainSeqno { get; set; }
         }
     }
 }

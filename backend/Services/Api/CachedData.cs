@@ -13,9 +13,13 @@
 
         public long LastKnownSeqno { get; private set; }
 
-        public List<Jetton> KnownJettons { get; private set; } = [];
+        public List<Jetton> AllJettons { get; private set; } = [];
 
-        public List<Pot> AllPools { get; private set; } = [];
+        public List<Pot> ActivePots { get; private set; } = [];
+
+        public HashSet<string> AllPotKeys { get; private set; } = [];
+
+        public long TotalUsers { get; private set; } = 0;
 
         public Task RunAsync(ITask currentTask, IServiceProvider scopeServiceProvider, CancellationToken cancellationToken)
         {
@@ -28,16 +32,21 @@
                 TelegramBotTokenWebappdataHash = HMACSHA256.HashData(keyBytes, tokenBytes);
             }
 
-            var db = scopeServiceProvider.GetRequiredService<IDbProvider>();
+            var db = scopeServiceProvider.GetRequiredService<IDbProvider>().MainDb;
 
-            LastKnownSeqno = db.MainDb.Find<Settings>(Settings.KeyLastSeqno)?.LongValue ?? default;
-            AllPools = db.MainDb.Table<Pot>().ToList();
-            KnownJettons = db.MainDb.Table<Jetton>().ToList();
+            LastKnownSeqno = db.Find<Settings>(Settings.KeyLastSeqno)?.LongValue ?? default;
+            ActivePots = db.Table<Pot>().Where(x => x.Charged != null && x.Paid == null).ToList();
+            AllPotKeys = db.Table<Pot>().Select(x => x.Key).ToHashSet(StringComparer.Ordinal);
+            AllJettons = db.Table<Jetton>().ToList();
+            TotalUsers = db.Table<User>().Count();
 
             var logger = scopeServiceProvider.GetRequiredService<ILogger<CachedData>>();
             logger.LogDebug(
-                "Reloaded: KnownJettons={Count}",
-                KnownJettons.Count);
+                "Reloaded: KnownJettons={Count1}, ActivePots={Count2}, TotalPotKeys={Count3}, TotalUsers={Total}",
+                AllJettons.Count,
+                ActivePots.Count,
+                AllPotKeys.Count,
+                TotalUsers);
 
             return Task.CompletedTask;
         }

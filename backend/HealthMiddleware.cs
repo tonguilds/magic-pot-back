@@ -102,21 +102,12 @@
 
             yield return ("Your IP", context.Connection.RemoteIpAddress?.ToString() ?? "-unknown-");
 
-            ////static (string Key, string Text) DescribeEntities(string code, IEnumerable<IBlockchainEntity> items)
-            ////{
-            ////    var count = items.Count();
-            ////    var text = count == 0
-            ////        ? "no entities"
-            ////        : $"total {count}, min sync {items.Min(x => x.LastSync):u}, max sync {items.Max(x => x.LastSync):u}";
-            ////    return ($"Entity {code}", text);
-            ////}
-
             var cd = context.RequestServices.GetRequiredService<CachedData>();
-            ////yield return DescribeEntities("A", cd.AllAdmins);
-            ////yield return DescribeEntities("U", cd.AllUsers);
-            ////yield return DescribeEntities("O", cd.AllOrders);
 
-            yield return ("Entity J", cd.KnownJettons.Count);
+            yield return ("Entity J", cd.AllJettons.Count);
+            yield return ("Entity U", cd.TotalUsers);
+            yield return ("Entity P", cd.AllPotKeys.Count);
+            yield return ("Entity P/a", cd.ActivePots.Count);
 
             yield return ("Masterchain seqno", cd.LastKnownSeqno.ToString(CultureInfo.InvariantCulture));
 
