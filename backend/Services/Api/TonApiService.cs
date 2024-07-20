@@ -8,13 +8,15 @@
         private static DateTimeOffset lastRequest = DateTimeOffset.MinValue;
         private static int requestCount = 0;
 
-        private readonly string baseUrl = Program.InMainnet ? "tonapi.io" : "testnet.tonapi.io";
+        public bool InMainnet { get; set; } = Program.InMainnet;
+
+        public string BaseUrl => InMainnet ? "tonapi.io" : "testnet.tonapi.io";
 
         public async Task<Jetton?> GetJettonInfo(string address)
         {
             await WaitIfNeeded();
 
-            using var resp = await httpClient.GetAsync($"https://{baseUrl}/v2/jettons/{address}");
+            using var resp = await httpClient.GetAsync($"https://{BaseUrl}/v2/jettons/{address}");
 
             if (resp.IsSuccessStatusCode)
             {
