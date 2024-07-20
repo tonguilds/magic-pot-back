@@ -14,7 +14,7 @@
         private readonly string path;
         private readonly IHttpClientFactory httpClientFactory;
 
-        public HealthReportTask(ILogger<HealthReportTask> logger, IConfiguration configuration, IOptions<BackendOptions> backendOptions, IHttpClientFactory httpClientFactory, NotificationService notificationService)
+        public HealthReportTask(ILogger<HealthReportTask> logger, IConfiguration configuration, IOptions<BackendOptions> backendOptions, IHttpClientFactory httpClientFactory, INotificationService notificationService)
         {
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));

@@ -5,6 +5,7 @@
     using System.Numerics;
     using MagicPot.Backend.Attributes;
     using MagicPot.Backend.Data;
+    using MagicPot.Backend.Services;
     using MagicPot.Backend.Services.Api;
     using MagicPot.Backend.Utils;
     using Microsoft.AspNetCore.Mvc;
@@ -19,8 +20,9 @@
     public class NewPotController(
         Lazy<IDbProvider> lazyDbProvider,
         ILogger<NewPotController> logger,
-        IFileService fileService,
-        NotificationService notificationService)
+        Lazy<IFileService> fileService,
+        Lazy<ITonApiService> tonApiService,
+        Lazy<INotificationService> notificationService)
         : ControllerBase
     {
         private const int MaxRetries = 100;
@@ -171,7 +173,7 @@
             pot.Touch();
             db.Update(pot);
 
-            notificationService.TryRun<Services.Indexer.PotUpdateTask>();
+            notificationService.Value.TryRun<Services.Indexer.PotUpdateTask>();
 
             return Ok();
         }
@@ -214,8 +216,7 @@
             var jetton = db.Find<Jetton>(x => x.Address == model.TokenAddress);
             if (jetton == null)
             {
-                var tonapi = HttpContext.RequestServices.GetRequiredService<TonApiService>();
-                jetton = await tonapi.GetJettonInfo(model.TokenAddress);
+                jetton = await tonApiService.Value.GetJettonInfo(model.TokenAddress);
                 if (jetton == null)
                 {
                     ModelState.AddModelError(nameof(model.TokenAddress), Messages.AddressIsNotAJetton);
@@ -229,7 +230,7 @@
                     logger.LogInformation("New Jetton saved: {Symbox} {Address} ({Name})", jetton.Symbol, jetton.Address, jetton.Name);
                 }
 
-                notificationService.TryRun<CachedData>();
+                notificationService.Value.TryRun<CachedData>();
             }
 
             if (string.IsNullOrWhiteSpace(model.UserAddress))
@@ -250,7 +251,7 @@
 
                 db.Insert(ujw);
 
-                notificationService.TryRun<Services.Indexer.DetectUserJettonAddressesTask>();
+                notificationService.Value.TryRun<Services.Indexer.DetectUserJettonAddressesTask>();
             }
 
             if (string.IsNullOrWhiteSpace(ujw.JettonWallet))
@@ -359,7 +360,7 @@
                 Created = DateTimeOffset.UtcNow,
                 Countdown = TimeSpan.FromMinutes(model.CountdownTimerMinutes),
                 TxSizeNext = model.TransactionSize,
-                TxSizeIncrease = model.IncreasingTransactionPercentage,
+                TxSizeIncrease = model.IncreasingTransactionPercentage ?? 0,
                 CreatorPercent = model.CreatorPercent ?? 0,
                 LastTxPercent = model.LastTransactionsPercent ?? 0,
                 LastTxCount = model.LastTransactionsCount ?? 0,
@@ -373,7 +374,7 @@
 
             if (coverImage != null)
             {
-                pot.CoverImage = await fileService.Upload(coverImage, pot.Key + ".dat");
+                pot.CoverImage = await fileService.Value.Upload(coverImage, pot.Key + ".dat");
                 logger.LogDebug("Cover image uploaded to {Uri}", pot.CoverImage);
             }
 
@@ -386,10 +387,11 @@
 
             db.Insert(pot);
 
-            notificationService.TryRun<CachedData>();
-            notificationService.TryRun<BackupTask>();
-            notificationService.TryRun<Services.Indexer.PotUpdateTask>();
-            notificationService.TryRun<Services.Indexer.PrecacheMnemonicsTask>();
+            var ns = notificationService.Value;
+            ns.TryRun<CachedData>();
+            ns.TryRun<BackupTask>();
+            ns.TryRun<Services.Indexer.PotUpdateTask>();
+            ns.TryRun<Services.Indexer.PrecacheMnemonicsTask>();
 
             return pot;
         }

@@ -3,7 +3,7 @@
     using System.IO;
     using RecurrentTasks;
 
-    public abstract class NotificationServiceBase : IDisposable
+    public abstract class NotificationServiceBase : INotificationService, IDisposable
     {
         private readonly ILogger logger;
         private readonly IServiceProvider serviceProvider;

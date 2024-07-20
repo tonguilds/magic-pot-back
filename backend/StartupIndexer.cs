@@ -1,6 +1,7 @@
 ﻿namespace MagicPot.Backend
 {
     using MagicPot.Backend.Data;
+    using MagicPot.Backend.Services;
     using MagicPot.Backend.Services.Indexer;
     using Microsoft.Extensions.Configuration;
     using RecurrentTasks;
@@ -34,7 +35,7 @@
             services.Configure<TonOptions>(o => o.Options.KeystoreType = new KeyStoreTypeDirectory(dir));
             services.AddSingleton<ITonClient, TonClient>();
 
-            services.AddSingleton<NotificationService>();
+            services.AddSingleton<INotificationService, NotificationService>();
 
             services.AddScoped<BlockchainReader>();
 

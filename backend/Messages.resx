@@ -118,27 +118,21 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="AddressIsNotAJetton" xml:space="preserve">
-    <value>Token address is not a Jetton Master address.</value>
+    <value>Address is not a Jetton Master address.</value>
   </data>
-  <data name="MaxAllowedValueIs100" xml:space="preserve">
-    <value>Must not be greather than 100.</value>
-  </data>
-  <data name="MustBeNonZero" xml:space="preserve">
-    <value>Zero value is invalid here.</value>
-  </data>
-  <data name="MustBeZero" xml:space="preserve">
-    <value>Zero value is expected here.</value>
+  <data name="MaxValueIs99h59m" xml:space="preserve">
+    <value>Maximum value is 99:59</value>
   </data>
   <data name="SumOfSharesMustBe100" xml:space="preserve">
     <value>Sum of all shares must be equal to 100.</value>
   </data>
-  <data name="TokenNameOrAddressRequired" xml:space="preserve">
-    <value>Exactly one of (Token Name, Token Address) must be specified.</value>
-  </data>
-  <data name="UnknownTokenName" xml:space="preserve">
-    <value>Token name is not known.</value>
-  </data>
   <data name="ValidatingUserJettonWallet" xml:space="preserve">
     <value>Validating your jetton wallet... Please retry in 5-10 seconds.</value>
+  </data>
+  <data name="ValuesInconsistentLastTransactions" xml:space="preserve">
+    <value>Last players percent and number must be both set or both empty.</value>
+  </data>
+  <data name="ValuesInconsistentRandomTransactions" xml:space="preserve">
+    <value>Random players percent and number must be both set or both empty.</value>
   </data>
 </root>

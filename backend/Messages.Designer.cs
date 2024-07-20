@@ -61,7 +61,7 @@ namespace MagicPot.Backend {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Token address is not a Jetton Master address..
+        ///   Looks up a localized string similar to Address is not a Jetton Master address..
         /// </summary>
         public static string AddressIsNotAJetton {
             get {
@@ -70,29 +70,11 @@ namespace MagicPot.Backend {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Must not be greather than 100..
+        ///   Looks up a localized string similar to Maximum value is 99:59.
         /// </summary>
-        public static string MaxAllowedValueIs100 {
+        public static string MaxValueIs99h59m {
             get {
-                return ResourceManager.GetString("MaxAllowedValueIs100", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Zero value is invalid here..
-        /// </summary>
-        public static string MustBeNonZero {
-            get {
-                return ResourceManager.GetString("MustBeNonZero", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Zero value is expected here..
-        /// </summary>
-        public static string MustBeZero {
-            get {
-                return ResourceManager.GetString("MustBeZero", resourceCulture);
+                return ResourceManager.GetString("MaxValueIs99h59m", resourceCulture);
             }
         }
         
@@ -106,29 +88,29 @@ namespace MagicPot.Backend {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Exactly one of (Token Name, Token Address) must be specified..
-        /// </summary>
-        public static string TokenNameOrAddressRequired {
-            get {
-                return ResourceManager.GetString("TokenNameOrAddressRequired", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Token name is not known..
-        /// </summary>
-        public static string UnknownTokenName {
-            get {
-                return ResourceManager.GetString("UnknownTokenName", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Validating your jetton wallet... Please retry in 5-10 seconds..
         /// </summary>
         public static string ValidatingUserJettonWallet {
             get {
                 return ResourceManager.GetString("ValidatingUserJettonWallet", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Last players percent and number must be both set or both empty..
+        /// </summary>
+        public static string ValuesInconsistentLastTransactions {
+            get {
+                return ResourceManager.GetString("ValuesInconsistentLastTransactions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Random players percent and number must be both set or both empty..
+        /// </summary>
+        public static string ValuesInconsistentRandomTransactions {
+            get {
+                return ResourceManager.GetString("ValuesInconsistentRandomTransactions", resourceCulture);
             }
         }
     }

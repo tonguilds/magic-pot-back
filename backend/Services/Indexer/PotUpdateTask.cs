@@ -3,7 +3,7 @@
     using MagicPot.Backend.Data;
     using RecurrentTasks;
 
-    public class PotUpdateTask(ILogger<PotUpdateTask> logger, IDbProvider dbProvider, BlockchainReader blockchainReader, NotificationService notificationService) : IRunnable
+    public class PotUpdateTask(ILogger<PotUpdateTask> logger, IDbProvider dbProvider, BlockchainReader blockchainReader, INotificationService notificationService) : IRunnable
     {
         public static readonly TimeSpan DefaultInterval = TimeSpan.FromSeconds(5);
 

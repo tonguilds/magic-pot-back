@@ -3,6 +3,7 @@
     using System.Reflection;
     using System.Text.Json.Serialization;
     using MagicPot.Backend.Data;
+    using MagicPot.Backend.Services;
     using MagicPot.Backend.Services.Api;
     using Microsoft.OpenApi.Models;
     using Polly;
@@ -38,7 +39,7 @@
             // Required for correct DB initialization (e.g. UseMainnet flag)
             services.Configure<TonLibDotNet.TonOptions>(configuration.GetSection("TonOptions"));
 
-            services.AddHttpClient<TonApiService>()
+            services.AddHttpClient<ITonApiService, TonApiService>()
                 .AddTransientHttpErrorPolicy(p => p.WaitAndRetryAsync(3, _ => TimeSpan.FromSeconds(1)));
 
             services.Configure<PinataOptions>(configuration.GetSection("PinataOptions"));
@@ -48,7 +49,7 @@
             services.Configure<BackupOptions>(configuration.GetSection("BackupOptions"));
             services.AddTask<BackupTask>(o => o.AutoStart = true);
 
-            services.AddSingleton<NotificationService>();
+            services.AddSingleton<INotificationService, NotificationService>();
 
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen(o =>
@@ -83,7 +84,7 @@
                 ];
         }
 
-        public void Configure(IApplicationBuilder app, NotificationService notificationService)
+        public void Configure(IApplicationBuilder app, INotificationService notificationService)
         {
             app.UseForwardedHeaders(new() { ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.All });
             app.UseStatusCodePages();

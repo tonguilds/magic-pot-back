@@ -3,7 +3,7 @@
     using MagicPot.Backend.Data;
     using MagicPot.Backend.Utils;
 
-    public class TonApiService(HttpClient httpClient)
+    public class TonApiService(HttpClient httpClient) : ITonApiService
     {
         private static DateTimeOffset lastRequest = DateTimeOffset.MinValue;
         private static int requestCount = 0;
