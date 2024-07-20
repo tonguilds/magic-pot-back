@@ -22,7 +22,7 @@
         ILogger<NewPotController> logger,
         Lazy<IFileService> fileService,
         Lazy<ITonApiService> tonApiService,
-        Lazy<INotificationService> notificationService)
+        INotificationService notificationService)
         : ControllerBase
     {
         private const int MaxRetries = 100;
@@ -173,7 +173,7 @@
             pot.Touch();
             db.Update(pot);
 
-            notificationService.Value.TryRun<Services.Indexer.PotUpdateTask>();
+            notificationService.TryRun<Services.Indexer.PotUpdateTask>();
 
             return Ok();
         }
@@ -230,7 +230,7 @@
                     logger.LogInformation("New Jetton saved: {Symbox} {Address} ({Name})", jetton.Symbol, jetton.Address, jetton.Name);
                 }
 
-                notificationService.Value.TryRun<CachedData>();
+                notificationService.TryRun<CachedData>();
             }
 
             if (string.IsNullOrWhiteSpace(model.UserAddress))
@@ -251,7 +251,7 @@
 
                 db.Insert(ujw);
 
-                notificationService.Value.TryRun<Services.Indexer.DetectUserJettonAddressesTask>();
+                notificationService.TryRun<Services.Indexer.DetectUserJettonAddressesTask>();
             }
 
             if (string.IsNullOrWhiteSpace(ujw.JettonWallet))
@@ -387,11 +387,10 @@
 
             db.Insert(pot);
 
-            var ns = notificationService.Value;
-            ns.TryRun<CachedData>();
-            ns.TryRun<BackupTask>();
-            ns.TryRun<Services.Indexer.PotUpdateTask>();
-            ns.TryRun<Services.Indexer.PrecacheMnemonicsTask>();
+            notificationService.TryRun<CachedData>();
+            notificationService.TryRun<BackupTask>();
+            notificationService.TryRun<Services.Indexer.PotUpdateTask>();
+            notificationService.TryRun<Services.Indexer.PrecacheMnemonicsTask>();
 
             return pot;
         }

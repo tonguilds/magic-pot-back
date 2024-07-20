@@ -41,10 +41,12 @@
 
             services.AddHttpClient<ITonApiService, TonApiService>()
                 .AddTransientHttpErrorPolicy(p => p.WaitAndRetryAsync(3, _ => TimeSpan.FromSeconds(1)));
+            services.AddScoped(sp => new Lazy<ITonApiService>(() => sp.GetRequiredService<ITonApiService>()));
 
             services.Configure<PinataOptions>(configuration.GetSection("PinataOptions"));
             services.AddHttpClient<IFileService, PinataService>()
                 .AddTransientHttpErrorPolicy(p => p.WaitAndRetryAsync(3, _ => TimeSpan.FromSeconds(1)));
+            services.AddScoped(sp => new Lazy<IFileService>(() => sp.GetRequiredService<IFileService>()));
 
             services.Configure<BackupOptions>(configuration.GetSection("BackupOptions"));
             services.AddTask<BackupTask>(o => o.AutoStart = true);
