@@ -24,7 +24,12 @@
         [MaxLength(DbProvider.MaxLenAddress)]
         public string? JettonWallet { get; set; }
 
+        public decimal? Balance { get; set; }
+
         [NotNull]
         public DateTimeOffset Created { get; set; } = DateTimeOffset.UtcNow;
+
+        [NotNull]
+        public DateTimeOffset Updated { get; set; } = DateTimeOffset.UtcNow;
     }
 }

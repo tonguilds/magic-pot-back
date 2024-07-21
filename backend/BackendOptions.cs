@@ -17,5 +17,7 @@
         public TimeSpan TelegramInitDataValidity { get; set; } = TimeSpan.FromHours(1);
 
         public string TelegramBotToken { get; set; } = string.Empty;
+
+        public TimeSpan JettonBalanceValidity { get; set; } = TimeSpan.FromMinutes(15);
     }
 }

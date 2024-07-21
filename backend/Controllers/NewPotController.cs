@@ -22,6 +22,7 @@
         ILogger<NewPotController> logger,
         Lazy<IFileService> fileService,
         Lazy<ITonApiService> tonApiService,
+        CachedData cachedData,
         INotificationService notificationService)
         : ControllerBase
     {
@@ -250,13 +251,25 @@
                 };
 
                 db.Insert(ujw);
+            }
 
-                notificationService.TryRun<Services.Indexer.DetectUserJettonAddressesTask>();
+            var boundary = DateTimeOffset.UtcNow.Subtract(cachedData.Options.JettonBalanceValidity);
+            if (ujw.Balance is null || ujw.Updated < boundary)
+            {
+                ujw.JettonWallet = null;
+                db.Update(ujw);
             }
 
             if (string.IsNullOrWhiteSpace(ujw.JettonWallet))
             {
+                notificationService.TryRun<Services.Indexer.DetectUserJettonAddressesTask>();
                 ModelState.AddModelError(nameof(model.TokenAddress), Messages.ValidatingUserJettonWallet);
+                return (null, null);
+            }
+
+            if (ujw.Balance < model.InitialSize)
+            {
+                ModelState.AddModelError(nameof(model.InitialSize), Messages.UnsufficientJettonAmount);
                 return (null, null);
             }
 

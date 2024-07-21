@@ -7,6 +7,7 @@
     using TonLibDotNet;
     using TonLibDotNet.Cells;
     using TonLibDotNet.Types.Msg;
+    using TonLibDotNet.Utils;
 
     public class BlockchainReader(ILogger<BlockchainReader> logger, ITonClient tonClient)
     {
@@ -31,6 +32,21 @@
 
             var jw = await TonLibDotNet.Recipes.Tep74Jettons.Instance.GetWalletAddress(tonClient, jettonMaster, mainWallet);
             return AddressConverter.ToContract(jw);
+        }
+
+        public async Task<BigInteger?> GetJettonBalance(string jettonWallet)
+        {
+            await tonClient.InitIfNeeded();
+
+            try
+            {
+                var (balance, _, _, _) = await TonLibDotNet.Recipes.Tep74Jettons.Instance.GetWalletData(tonClient, jettonWallet);
+                return balance;
+            }
+            catch (TonLibNonZeroExitCodeException)
+            {
+                return null;
+            }
         }
 
         public async IAsyncEnumerable<TonLibDotNet.Types.Raw.Transaction> EnumerateTransactions(string address, TonLibDotNet.Types.Internal.TransactionId start, long endLt)

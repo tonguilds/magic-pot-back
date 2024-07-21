@@ -1,5 +1,6 @@
 ﻿namespace MagicPot.Backend.Services.Indexer
 {
+    using System.Numerics;
     using MagicPot.Backend.Data;
     using RecurrentTasks;
 
@@ -22,8 +23,22 @@
                 }
 
                 item.JettonWallet = await blockchainReader.GetJettonWallet(item.JettonMaster, item.MainWallet);
+
+                var balance = await blockchainReader.GetJettonBalance(item.JettonWallet);
+                if (balance == null)
+                {
+                    item.Balance = 0;
+                }
+                else
+                {
+                    var jetton = dbProvider.MainDb.Get<Jetton>(x => x.Address == item.JettonMaster);
+                    item.Balance = (decimal)(balance.Value / (BigInteger)Math.Pow(10, jetton.Decimals));
+                }
+
+                item.Updated = DateTimeOffset.UtcNow;
+
                 dbProvider.MainDb.Update(item);
-                logger.LogDebug("Saved JettonWallet {Address} for user {Wallet} and jetton {Master}", item.JettonWallet, item.MainWallet, item.JettonMaster);
+                logger.LogDebug("Saved JettonWallet {Address} for user {Wallet} and jetton {Master}, balance {Balance}", item.JettonWallet, item.MainWallet, item.JettonMaster, item.Balance);
                 changed = true;
             }
 

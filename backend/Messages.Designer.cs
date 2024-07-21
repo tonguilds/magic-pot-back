@@ -88,6 +88,15 @@ namespace MagicPot.Backend {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to You have no enough jettons in your wallet..
+        /// </summary>
+        public static string UnsufficientJettonAmount {
+            get {
+                return ResourceManager.GetString("UnsufficientJettonAmount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Validating your jetton wallet... Please retry in 5-10 seconds..
         /// </summary>
         public static string ValidatingUserJettonWallet {

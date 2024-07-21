@@ -126,6 +126,9 @@
   <data name="SumOfSharesMustBe100" xml:space="preserve">
     <value>Sum of all shares must be equal to 100.</value>
   </data>
+  <data name="UnsufficientJettonAmount" xml:space="preserve">
+    <value>You have no enough jettons in your wallet.</value>
+  </data>
   <data name="ValidatingUserJettonWallet" xml:space="preserve">
     <value>Validating your jetton wallet... Please retry in 5-10 seconds.</value>
   </data>
