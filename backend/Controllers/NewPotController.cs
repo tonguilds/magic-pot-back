@@ -263,20 +263,28 @@
             return (jetton, ujw.JettonWallet);
         }
 
-        protected async Task<MemoryStream?> ValidateCoverImage(string? base64, IFormFile? file, string paramName)
+        protected async Task<MemoryStream?> ValidateCoverImage(string? dataUrl, IFormFile? file, string paramName)
         {
             MemoryStream? image = null;
 
-            if (!string.IsNullOrEmpty(base64))
+            //// Sample: data:image/jpeg;base64,...
+            if (!string.IsNullOrEmpty(dataUrl))
             {
+                var pos = dataUrl.IndexOf(',') + 1;
+                if (pos == 0)
+                {
+                    ModelState.AddModelError(paramName, "Unknown image data format");
+                    return null;
+                }
+
                 try
                 {
-                    var bytes = Convert.FromBase64String(base64);
+                    var bytes = Convert.FromBase64String(dataUrl[pos..]);
                     image = new MemoryStream(bytes);
                 }
                 catch (FormatException)
                 {
-                    ModelState.AddModelError(paramName, "Unable to decode base64 image data");
+                    ModelState.AddModelError(paramName, "Unable to decode image data");
                     return null;
                 }
             }
