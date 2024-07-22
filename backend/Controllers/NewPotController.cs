@@ -29,6 +29,15 @@
         private const int MaxRetries = 100;
         private static readonly Random Rand = new();
 
+        private static readonly SixLabors.ImageSharp.Formats.DecoderOptions ImageSharpDecoderOptions = new()
+        {
+            Configuration = new(
+                new SixLabors.ImageSharp.Formats.Jpeg.JpegConfigurationModule(),
+                new SixLabors.ImageSharp.Formats.Png.PngConfigurationModule(),
+                new SixLabors.ImageSharp.Formats.Webp.WebpConfigurationModule(),
+                new SixLabors.ImageSharp.Formats.Gif.GifConfigurationModule()),
+        };
+
         /// <summary>
         /// Checks new pot data (without creating when no errors found).
         /// </summary>
@@ -316,7 +325,7 @@
 
             try
             {
-                using var img = await Image.LoadAsync(image);
+                using var img = await Image.LoadAsync(ImageSharpDecoderOptions, image);
                 logger.LogDebug("Image OK: {Format}, width {Width}, height {Height}", img.Metadata.DecodedImageFormat?.Name, img.Width, img.Height);
                 image.Position = 0;
                 return image;
