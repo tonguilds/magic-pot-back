@@ -20,6 +20,7 @@
         /// </summary>
         [Required(AllowEmptyStrings = false)]
         [MaxLength(DbProvider.MaxLenName)]
+        [RegularExpression(@"[A-Za-zА-Яа-я\ \d\.\,\!\?]+")]
         public string Name { get; set; } = string.Empty;
 
         /// <summary>

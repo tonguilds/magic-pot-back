@@ -39,6 +39,31 @@
         }
 
         [Theory]
+        [InlineData("Test", true)]
+        [InlineData("Тест", true)]
+        [InlineData("Тест? Test! 123.456.789,0", true)]
+        [InlineData("Test-test_test", false)]
+        public void NameIsChecked(string value, bool valid)
+        {
+            model.Name = value;
+
+            var errors = new List<ValidationResult>();
+            var result = Validator.TryValidateObject(model, new ValidationContext(model, null, null), errors, true);
+
+            if (valid)
+            {
+                Assert.Empty(errors);
+                Assert.True(result);
+            }
+            else
+            {
+                Assert.NotEmpty(errors);
+                Assert.Contains(nameof(model.Name), errors[0].MemberNames);
+                Assert.False(result);
+            }
+        }
+
+        [Theory]
         [InlineData(InvalidAddress)]
         [InlineData("")]
         public void FailOnInvalidUserAddress(string value)
