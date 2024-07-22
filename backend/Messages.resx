@@ -132,6 +132,9 @@
   <data name="ValidatingUserJettonWallet" xml:space="preserve">
     <value>Validating your jetton wallet... Please retry in 5-10 seconds.</value>
   </data>
+  <data name="ValidatingUserJettonWalletFieldName" xml:space="preserve">
+    <value>tokenAddressValidating</value>
+  </data>
   <data name="ValuesInconsistentLastTransactions" xml:space="preserve">
     <value>Last players percent and number must be both set or both empty.</value>
   </data>

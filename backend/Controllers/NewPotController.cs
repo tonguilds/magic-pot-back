@@ -263,7 +263,7 @@
             if (string.IsNullOrWhiteSpace(ujw.JettonWallet))
             {
                 notificationService.TryRun<Services.Indexer.DetectUserJettonAddressesTask>();
-                ModelState.AddModelError(nameof(model.TokenAddress), Messages.ValidatingUserJettonWallet);
+                ModelState.AddModelError(Messages.ValidatingUserJettonWalletFieldName, Messages.ValidatingUserJettonWallet);
                 return (null, null);
             }
 

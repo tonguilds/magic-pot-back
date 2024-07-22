@@ -106,6 +106,15 @@ namespace MagicPot.Backend {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to tokenAddressValidating.
+        /// </summary>
+        public static string ValidatingUserJettonWalletFieldName {
+            get {
+                return ResourceManager.GetString("ValidatingUserJettonWalletFieldName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Last players percent and number must be both set or both empty..
         /// </summary>
         public static string ValuesInconsistentLastTransactions {
