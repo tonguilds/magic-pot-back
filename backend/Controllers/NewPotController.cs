@@ -148,7 +148,7 @@
             }
 
             var jetton = db.Get<Jetton>(x => x.Address == pot.JettonMaster);
-            var ujw = db.Get<UserJettonWallet>(x => x.MainWallet == pot.OwnerUserAddress && x.JettonMaster == pot.Address);
+            var ujw = db.Get<UserJettonWallet>(x => x.MainWallet == pot.OwnerUserAddress && x.JettonMaster == pot.JettonMaster);
             var txInfo = PrepareTxInfo(pot, jetton, ujw.JettonWallet!);
 
             return new NewPotInfo(pot.Key, txInfo.RawAddress, txInfo.Amount, txInfo.Payload);
