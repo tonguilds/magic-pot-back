@@ -5,6 +5,7 @@
     using MagicPot.Backend.Data;
     using MagicPot.Backend.Services;
     using MagicPot.Backend.Services.Api;
+    using MagicPot.Backend.Utils;
     using Microsoft.OpenApi.Models;
     using Polly;
     using RecurrentTasks;
@@ -20,7 +21,7 @@
             services.AddSingleton<IndexerHealthUpdateMiddleware>();
 
             services
-                .AddControllers()
+                .AddControllers(o => o.InputFormatters.Add(new PlainTextFormatter()))
                 .ConfigureApiBehaviorOptions(o => o.SuppressModelStateInvalidFilter = true)
                 .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(System.Text.Json.JsonNamingPolicy.CamelCase, allowIntegerValues: false)));
 
