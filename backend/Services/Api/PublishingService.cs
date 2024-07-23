@@ -151,7 +151,7 @@ Size: *{pot.InitialSize.ToString("N0", DefaultCulture)} {MarkdownEscape(jetton.S
 
                 return (data, "sendMessage");
             }
-            else
+            else if (!pot.CoverIsAnimated)
             {
                 var data = new
                 {
@@ -164,6 +164,20 @@ Size: *{pot.InitialSize.ToString("N0", DefaultCulture)} {MarkdownEscape(jetton.S
                 };
 
                 return (data, "sendPhoto");
+            }
+            else
+            {
+                var data = new
+                {
+                    chat_id = options.TelegramPublishingChatId,
+                    message_thread_id = options.TelegramPublishingThreadId,
+                    animation = pot.CoverImage,
+                    caption = text,
+                    parse_mode = "MarkdownV2",
+                    reply_markup = replyMarkup,
+                };
+
+                return (data, "sendAnimation");
             }
         }
     }

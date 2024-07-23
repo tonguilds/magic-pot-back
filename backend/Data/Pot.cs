@@ -56,6 +56,8 @@
         [MaxLength(DbProvider.MaxLenUri)]
         public string? CoverImage { get; set; }
 
+        public bool CoverIsAnimated { get; set; }
+
         [NotNull]
         public decimal InitialSize { get; set; }
 

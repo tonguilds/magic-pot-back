@@ -56,7 +56,8 @@
             }
 
             await ValidateJetton(model);
-            using var ms = await ValidateCoverImage(model.CoverImage, null, nameof(model.CoverImage));
+            (var ms, _) = await ValidateCoverImage(model.CoverImage, null, nameof(model.CoverImage));
+            ms?.Dispose();
 
             return ModelState.IsValid ? new CheckResult(true, null) : new CheckResult(false, new ValidationProblemDetails(ModelState).Errors);
         }
@@ -81,7 +82,8 @@
             }
 
             await ValidateJetton(model);
-            using var ms = await ValidateCoverImage(null, coverImage, nameof(coverImage));
+            (var ms, _) = await ValidateCoverImage(null, coverImage, nameof(coverImage));
+            ms?.Dispose();
 
             return ModelState.IsValid ? new CheckResult(true, null) : new CheckResult(false, new ValidationProblemDetails(ModelState).Errors);
         }
@@ -98,9 +100,9 @@
             [Required(AllowEmptyStrings = false), InitDataValidation, FromHeader(Name = BackendOptions.TelegramInitDataHeaderName)] string initData,
             [Required] NewPotWithCoverModel model)
         {
-            using var ms = await ValidateCoverImage(model.CoverImage, null, nameof(model.CoverImage));
+            var (ms, animated) = await ValidateCoverImage(model.CoverImage, null, nameof(model.CoverImage));
 
-            return await CreateNewPot(initData, model, ms);
+            return await CreateNewPot(initData, model, ms, animated);
         }
 
         /// <summary>
@@ -117,9 +119,9 @@
             [Required, FromForm] NewPotModel model,
             IFormFile? coverImage)
         {
-            using var ms = await ValidateCoverImage(null, coverImage, nameof(coverImage));
+            var(ms, animated) = await ValidateCoverImage(null, coverImage, nameof(coverImage));
 
-            return await CreateNewPot(initData, model, ms);
+            return await CreateNewPot(initData, model, ms, animated);
         }
 
         /// <summary>
@@ -191,7 +193,7 @@
             return Ok();
         }
 
-        protected async Task<ActionResult<NewPotInfo>> CreateNewPot(string initData, NewPotModel model, MemoryStream? coverImage)
+        protected async Task<ActionResult<NewPotInfo>> CreateNewPot(string initData, NewPotModel model, MemoryStream? coverImage, bool coverImageAnimated)
         {
             if (!ModelState.IsValid)
             {
@@ -209,7 +211,7 @@
 
             var user = lazyDbProvider.Value.GetOrCreateUser(tgUser);
 
-            var pot = await CreatePot(model, user.Id, jetton!.Address, coverImage);
+            var pot = await CreatePot(model, user.Id, jetton!.Address, coverImage, coverImageAnimated);
             var txInfo = PrepareTxInfo(pot, jetton, userJettonAddress!);
 
             logger.LogInformation("New Pot created: {Key} by #{UserId} / @{User} for {Amount} {Symbol}", pot.Key, user.Id, user.Username, pot.InitialSize, jetton.Symbol);
@@ -290,7 +292,7 @@
             return (jetton, ujw.JettonWallet);
         }
 
-        protected async Task<MemoryStream?> ValidateCoverImage(string? dataUrl, IFormFile? file, string paramName)
+        protected async Task<(MemoryStream? Image, bool Animated)> ValidateCoverImage(string? dataUrl, IFormFile? file, string paramName)
         {
             MemoryStream? image = null;
 
@@ -301,7 +303,7 @@
                 if (pos == 0)
                 {
                     ModelState.AddModelError(paramName, "Unknown image data format");
-                    return null;
+                    return (null, false);
                 }
 
                 try
@@ -312,7 +314,7 @@
                 catch (FormatException)
                 {
                     ModelState.AddModelError(paramName, "Unable to decode image data");
-                    return null;
+                    return (null, false);
                 }
             }
 
@@ -325,21 +327,22 @@
 
             if (image == null)
             {
-                return null;
+                return (null, false);
             }
 
             try
             {
-                using var img = await Image.LoadAsync(ImageSharpDecoderOptions, image);
-                logger.LogDebug("Image OK: {Format}, width {Width}, height {Height}", img.Metadata.DecodedImageFormat?.Name, img.Width, img.Height);
+                var img = await Image.IdentifyAsync(ImageSharpDecoderOptions, image);
+                var frames = img.FrameMetadataCollection.Count;
+                logger.LogDebug("Image OK: {Format}, width {Width}, height {Height}, frames {Count}", img.Metadata.DecodedImageFormat?.Name, img.Width, img.Height, frames);
                 image.Position = 0;
-                return image;
+                return (image, frames > 1);
             }
             catch (Exception ex)
             {
                 logger.LogDebug(ex, "Image not Ok");
                 ModelState.AddModelError(paramName, "Not a valid image, or format not supported");
-                return null;
+                return (null, false);
             }
         }
 
@@ -377,7 +380,7 @@
             throw new CreateNewPotException($"Failed to generate Pot Contract Address (in {MaxRetries} attempts)");
         }
 
-        protected async Task<Pot> CreatePot(NewPotModel model, long userId, string tokenAddress, MemoryStream? coverImage)
+        protected async Task<Pot> CreatePot(NewPotModel model, long userId, string tokenAddress, MemoryStream? coverImage, bool coverImageAnimated)
         {
             var db = lazyDbProvider.Value.MainDb;
 
@@ -410,6 +413,7 @@
             if (coverImage != null)
             {
                 pot.CoverImage = await fileService.Value.Upload(coverImage, pot.Key + ".dat");
+                pot.CoverIsAnimated = coverImageAnimated;
                 logger.LogDebug("Cover image uploaded to {Uri}", pot.CoverImage);
             }
 
