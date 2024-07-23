@@ -122,7 +122,7 @@
 
         protected static (object? Data, string Path) CreatePotCreated(Pot pot, Jetton jetton, BackendOptions options)
         {
-            var text = @$"New pot *{MarkdownEscape(pot.Name)}* created!
+            var text = @$"New pot *{MarkdownEscape(pot.Name)}* created\!
 
 Size: *{pot.InitialSize.ToString("N0", DefaultCulture)} {MarkdownEscape(jetton.Symbol)}*";
 
