@@ -19,5 +19,9 @@
         public string TelegramBotToken { get; set; } = string.Empty;
 
         public TimeSpan JettonBalanceValidity { get; set; } = TimeSpan.FromMinutes(15);
+
+        public string TelegramPublishingChatId { get; set; } = string.Empty;
+
+        public long? TelegramPublishingThreadId { get; set; }
     }
 }

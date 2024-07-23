@@ -44,6 +44,7 @@
                 if (changed)
                 {
                     notificationService.TryRun<Api.CachedData>();
+                    notificationService.TryRun<Api.PublishingService>();
                 }
             }
         }
@@ -94,6 +95,8 @@
                         db.Update(tx);
 
                         pot.Charged = tx.Notified;
+
+                        db.Insert(PublishQueueItem.Create(pot.Id, PublishReason.PotCreated));
                     }
                 }
 

@@ -53,6 +53,9 @@
 
             services.AddSingleton<INotificationService, NotificationService>();
 
+            services.AddHttpClient<PublishingService>();
+            services.AddTask<PublishingService>(o => o.AutoStart(PublishingService.DefaultInterval));
+
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen(o =>
             {
@@ -83,6 +86,7 @@
                     typeof(ITask<CachedData>),
                     typeof(ITask<IndexerControlTask>),
                     typeof(ITask<BackupTask>),
+                    typeof(ITask<PublishingService>),
                 ];
         }
 
