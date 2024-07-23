@@ -9,7 +9,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
 		.gitignore = .gitignore
+		Installation.md = Installation.md
 		publish-backend.sh = publish-backend.sh
+		README.md = README.md
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "backend.tests", "backend.tests\backend.tests.csproj", "{60D18DC9-7CD6-418B-B62C-9AAB1C13EE18}"
