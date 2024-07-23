@@ -23,5 +23,9 @@
         public string TelegramPublishingChatId { get; set; } = string.Empty;
 
         public long? TelegramPublishingThreadId { get; set; }
+
+        public decimal TonAmountForGas { get; set; } = 0.05M;
+
+        public decimal TonAmountForInterest { get; set; } = 0.02M;
     }
 }

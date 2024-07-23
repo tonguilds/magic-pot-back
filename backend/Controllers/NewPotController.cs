@@ -437,7 +437,7 @@
         protected (string RawAddress, long Amount, string Payload) PrepareTxInfo(Pot pot, Jetton jetton, string userJettonAddress)
         {
             var rawAddress = userJettonAddress;
-            var tonAmount = TonLibDotNet.Utils.CoinUtils.Instance.ToNano(0.5M + 0.2M);
+            var tonAmount = TonLibDotNet.Utils.CoinUtils.Instance.ToNano(cachedData.Options.TonAmountForGas + cachedData.Options.TonAmountForInterest);
             var jettonAmount = (BigInteger)pot.InitialSize * (BigInteger)Math.Pow(10, jetton.Decimals);
             var payload = TonLibDotNet.Recipes.Tep74Jettons.Instance.CreateTransferCell(
                 (ulong)pot.Id,
@@ -445,7 +445,7 @@
                 pot.Address,
                 pot.OwnerUserAddress,
                 null,
-                0.02M,
+                cachedData.Options.TonAmountForInterest,
                 null);
 
             return (rawAddress, tonAmount, payload.ToBoc().SerializeToBase64());
