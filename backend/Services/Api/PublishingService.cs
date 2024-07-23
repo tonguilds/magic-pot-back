@@ -105,7 +105,7 @@
             using var resp = await httpClient.PostAsJsonAsync(url, data);
             if (!resp.IsSuccessStatusCode)
             {
-                var text = resp.Content.ReadAsStringAsync();
+                var text = await resp.Content.ReadAsStringAsync();
                 logger.LogDebug("Response: {Text}", text);
 
                 // and throw it
