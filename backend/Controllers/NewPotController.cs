@@ -433,8 +433,8 @@
             var payload = TonLibDotNet.Recipes.Tep74Jettons.Instance.CreateTransferCell(
                 (ulong)pot.Id,
                 jettonAmount,
-                pot.OwnerUserAddress,
                 pot.Address,
+                pot.OwnerUserAddress,
                 null,
                 0.02M,
                 null);
