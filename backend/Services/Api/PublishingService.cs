@@ -103,7 +103,14 @@
 
             var url = $"https://api.telegram.org/bot{options.TelegramBotToken}/{path}";
             using var resp = await httpClient.PostAsJsonAsync(url, data);
-            resp.EnsureSuccessStatusCode();
+            if (!resp.IsSuccessStatusCode)
+            {
+                var text = resp.Content.ReadAsStringAsync();
+                logger.LogDebug("Response: {Text}", text);
+
+                // and throw it
+                resp.EnsureSuccessStatusCode();
+            }
 
             logger.LogInformation("Published info about {Event} of pot {Key}", item.Reason, pot.Key);
         }

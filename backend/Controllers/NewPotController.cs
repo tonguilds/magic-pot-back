@@ -212,6 +212,8 @@
             var pot = await CreatePot(model, user.Id, jetton!.Address, coverImage);
             var txInfo = PrepareTxInfo(pot, jetton, userJettonAddress!);
 
+            logger.LogInformation("New Pot created: {Key} by #{UserId} / @{User} for {Amount} {Symbol}", pot.Key, user.Id, user.Username, pot.InitialSize, jetton.Symbol);
+
             return new NewPotInfo(pot.Key, txInfo.RawAddress, txInfo.Amount, txInfo.Payload);
         }
 
