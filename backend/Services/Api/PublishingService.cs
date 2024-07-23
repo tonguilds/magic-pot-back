@@ -117,7 +117,7 @@
 
         protected static string CreateLinkToPot(string key)
         {
-            return "https://t.me/magic_pot_bot?start=" + key;
+            return "https://t.me/magic_pot_bot?start=pot." + key;
         }
 
         protected static (object? Data, string Path) CreatePotCreated(Pot pot, Jetton jetton, BackendOptions options)
@@ -132,7 +132,7 @@ Size: *{pot.InitialSize.ToString("N0", DefaultCulture)} {MarkdownEscape(jetton.S
                 {
                     new[]
                     {
-                        new { text = "Steal the pot", web_app = new { url = CreateLinkToPot(pot.Key) } },
+                        new { text = "Steal the pot", url = CreateLinkToPot(pot.Key) },
                     },
                 },
             };
