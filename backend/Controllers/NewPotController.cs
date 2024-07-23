@@ -427,7 +427,7 @@
 
         protected (string RawAddress, long Amount, string Payload) PrepareTxInfo(Pot pot, Jetton jetton, string userJettonAddress)
         {
-            var rawAddress = AddressConverter.ToRaw(userJettonAddress);
+            var rawAddress = userJettonAddress;
             var tonAmount = TonLibDotNet.Utils.CoinUtils.Instance.ToNano(0.5M + 0.2M);
             var jettonAmount = (BigInteger)pot.InitialSize * (BigInteger)Math.Pow(10, jetton.Decimals);
             var payload = TonLibDotNet.Recipes.Tep74Jettons.Instance.CreateTransferCell(
