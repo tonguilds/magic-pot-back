@@ -127,9 +127,10 @@
         /// </summary>
         /// <param name="initData">Value of <see href="https://core.telegram.org/bots/webapps#initializing-mini-apps">initData</see> Telegram property.</param>
         /// <param name="key">Pot key.</param>
-        /// <returns>Pot string key (for future usage) and transaction data for user to send initial prize.</returns>
-        [HttpPost]
-        [Consumes(MediaTypeNames.Application.Json)]
+        /// <returns>Pot string key and transaction data for user to send initial prize.</returns>
+        /// <remarks>User must be an owner of requested pot, otherwise error 404 will be returned.</remarks>
+        [HttpGet("{key:minlength(3)}")]
+        [SwaggerResponse(404, "Pot with specified key not found or not owned by specified user.")]
         public ActionResult<NewPotInfo> GetSendPrizeTransactionData(
             [Required(AllowEmptyStrings = false), InitDataValidation, FromHeader(Name = BackendOptions.TelegramInitDataHeaderName)] string initData,
             [Required(AllowEmptyStrings = false)] string key)
@@ -160,12 +161,14 @@
         /// <param name="initData">Value of <see href="https://core.telegram.org/bots/webapps#initializing-mini-apps">initData</see> Telegram property.</param>
         /// <param name="key">Pot key.</param>
         /// <param name="boc">BOC from TON Connect after successful transaction execution.</param>
-        [HttpPost]
-        [Consumes(MediaTypeNames.Application.Json)]
+        /// <remarks>User must be an owner of requested pot, otherwise error 404 will be returned.</remarks>
+        [HttpPost("{key:minlength(3)}")]
+        [Consumes(MediaTypeNames.Text.Plain)]
+        [SwaggerResponse(404, "Pot with specified key not found or not owned by specified user.")]
         public ActionResult WaitForPrizeTransaction(
             [Required(AllowEmptyStrings = false), InitDataValidation, FromHeader(Name = BackendOptions.TelegramInitDataHeaderName)] string initData,
             [Required(AllowEmptyStrings = false)] string key,
-            [Required(AllowEmptyStrings = false)] string boc)
+            [Required(AllowEmptyStrings = false), FromBody] string boc)
         {
             if (!ModelState.IsValid)
             {
