@@ -121,8 +121,8 @@
 
         protected void UpdateDb(SQLiteConnection connection)
         {
-            const int minVersion = 1;
-            const int lastVersion = 5;
+            const int minVersion = 5;
+            const int lastVersion = 6;
 
             var ver = connection.Find<Settings>(Settings.KeyDbVersion)?.IntValue ?? 0;
 
@@ -137,13 +137,13 @@
                 throw new InvalidOperationException($"Too old version: {ver} (supported minumum: {minVersion})");
             }
 
-            ////if (ver == 1)
-            ////{
-            ////    logger.LogInformation("Upgrading from version {Version}...", ver);
-            ////    connection.Execute("...");
-            ////    connection.InsertOrReplace(new Settings(Settings.KeyDbVersion, ++ver));
-            ////    logger.LogInformation("Upgraded to ver.{Version}", ver);
-            ////}
+            if (ver == 5)
+            {
+                logger.LogInformation("Upgrading from version {Version}...", ver);
+                connection.Execute("UPDATE [Pot] SET TxCount = 0 WHERE TxCount IS NULL");
+                connection.InsertOrReplace(new Settings(Settings.KeyDbVersion, ++ver));
+                logger.LogInformation("Upgraded to ver.{Version}", ver);
+            }
 
             if (ver != lastVersion)
             {
