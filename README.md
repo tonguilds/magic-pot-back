@@ -28,6 +28,11 @@ See [separate document](Installation.md).
 
 ## Configuration
 
+Make sure you have prepared:
+
+* Telegram Bot token (from BotFather): for validating users, and for publishing info into channel/chat;
+* Pinata credentials (from [pinata.cloud](https://www.pinata.cloud/)): for storing pot cover images.
+
 Edit the `appsettings.json` file. A short help/description for each setting is included inside.
 
 ⚠️ Important note: Backend may run on both testnet and mainnet - this is controlled by the `UseMainnet` setting. You MUST manually delete existing database when switching between networks - otherwise backend will refuse to start.
