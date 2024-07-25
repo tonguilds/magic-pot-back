@@ -58,6 +58,14 @@ This document assumes that you install Backend to `/var/www/magic-pot-api` folde
             listen [::]:80;
             server_name api.mymagicpotsite.com;
 
+            client_max_body_size 5M;
+
+            # need 'always' to add header to error responses,
+            # but this will duplicate header on success responses,
+            # so just hide original response header.
+            add_header 'Access-Control-Allow-Origin' '*' always;
+            proxy_hide_header 'Access-Control-Allow-Origin';
+
             location / {
                 proxy_pass         http://localhost:5000;
                 proxy_http_version 1.1;
