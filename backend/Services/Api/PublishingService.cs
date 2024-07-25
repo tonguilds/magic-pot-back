@@ -90,23 +90,27 @@
 
             var jetton = dbProvider.MainDb.Get<Jetton>(x => x.Address == pot.JettonMaster);
 
-            var (data, path) = item.Reason switch
+            var text = item.Reason switch
             {
-                PublishReason.PotCreated => CreatePotCreated(pot, jetton, options),
-                _ => (string.Empty, string.Empty),
+                PublishReason.PotCharged => GeneratePotCreatedMessageText(pot, jetton),
+                PublishReason.PotActivated => GeneratePotActivatedMessageText(pot, jetton),
+                PublishReason.PotStolen => GeneratePotStolenMessageText(pot, jetton),
+                _ => string.Empty,
             };
 
-            if (data == null)
+            if (string.IsNullOrEmpty(text))
             {
                 return;
             }
+
+            var (data, path) = CreatePotMessage(text, pot, options);
 
             var url = $"https://api.telegram.org/bot{options.TelegramBotToken}/{path}";
             using var resp = await httpClient.PostAsJsonAsync(url, data);
             if (!resp.IsSuccessStatusCode)
             {
-                var text = await resp.Content.ReadAsStringAsync();
-                logger.LogDebug("Response: {Text}", text);
+                var respText = await resp.Content.ReadAsStringAsync();
+                logger.LogDebug("Response: {Text}", respText);
 
                 // and throw it
                 resp.EnsureSuccessStatusCode();
@@ -120,12 +124,29 @@
             return "https://t.me/magic_pot_bot?start=pot." + key;
         }
 
-        protected static (object? Data, string Path) CreatePotCreated(Pot pot, Jetton jetton, BackendOptions options)
+        protected static string GeneratePotCreatedMessageText(Pot pot, Jetton jetton)
         {
-            var text = @$"New pot *{MarkdownEscape(pot.Name)}* created\!
+            return @$"{Emoji.GlowingStar} New pot *{MarkdownEscape(pot.Name)}* created\!
 
 Size: *{pot.InitialSize.ToString("N0", DefaultCulture)} {MarkdownEscape(jetton.Symbol)}*";
+        }
 
+        protected static string GeneratePotActivatedMessageText(Pot pot, Jetton jetton)
+        {
+            return @$"{Emoji.HighVoltage} First bet in *{MarkdownEscape(pot.Name)}*\!
+
+{Emoji.HourglassNotDone} Countdown started\! Make your bet to steal this pot with *{pot.TotalSize.ToString("N0", DefaultCulture)} {MarkdownEscape(jetton.Symbol)}*";
+        }
+
+        protected static string GeneratePotStolenMessageText(Pot pot, Jetton jetton)
+        {
+            return @$"{Emoji.SlotMachine} *{MarkdownEscape(pot.Name)}* has been stolen\!
+
+{Emoji.MoneyBag} *{pot.TotalSize.ToString("N0", DefaultCulture)} {MarkdownEscape(jetton.Symbol)}* will be delivered soon to winner's wallets.";
+        }
+
+        protected static (object Data, string Path) CreatePotMessage(string text, Pot pot, BackendOptions options)
+        {
             var replyMarkup = new
             {
                 inline_keyboard = new[]

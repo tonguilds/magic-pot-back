@@ -2,7 +2,6 @@
 {
     using System.Diagnostics.CodeAnalysis;
     using System.Numerics;
-    using MagicPot.Backend.Data;
     using MagicPot.Backend.Utils;
     using TonLibDotNet;
     using TonLibDotNet.Cells;
@@ -49,6 +48,13 @@
             }
         }
 
+        public async Task<(DateTimeOffset SyncTime, TonLibDotNet.Types.Internal.TransactionId LastTransaction)> GetAccountState(string account)
+        {
+            await tonClient.InitIfNeeded();
+            var state = await tonClient.RawGetAccountState(account);
+            return (state.SyncUtime, state.LastTransactionId);
+        }
+
         public async IAsyncEnumerable<TonLibDotNet.Types.Raw.Transaction> EnumerateTransactions(string address, TonLibDotNet.Types.Internal.TransactionId start, long endLt)
         {
             await tonClient.InitIfNeeded();
@@ -80,74 +86,6 @@
                     start = res.PreviousTransactionId;
                 }
             }
-        }
-
-        public async Task<bool> CheckNewPotTransactions(Pot pot, Jetton jetton, IDbProvider dbProvider)
-        {
-            await tonClient.InitIfNeeded();
-
-            var foundNew = false;
-            var db = dbProvider.MainDb;
-
-            var state = await tonClient.RawGetAccountState(pot.Address);
-
-            if (state.LastTransactionId.Lt == pot.SyncLt)
-            {
-                pot.SyncUtime = state.SyncUtime;
-                db.Update(pot);
-                logger.LogTrace("Pot {Key} unchanged with lt={Lt}, sync {Time}", pot.Key, pot.SyncLt, pot.SyncUtime);
-                return foundNew;
-            }
-
-            await foreach (var tx in EnumerateTransactions(pot.Address, state.LastTransactionId, pot.SyncLt))
-            {
-                var existing = db.Find<PotTransaction>(x => x.PotId == pot.Id && x.Hash == tx.TransactionId.Hash);
-                if (existing != null)
-                {
-                    continue;
-                }
-
-                var ptx = new PotTransaction
-                {
-                    PotId = pot.Id,
-                    State = PotTransactionState.Unknown,
-                    Hash = tx.TransactionId.Hash,
-                    Notified = tx.Utime,
-                };
-
-                if (tx.InMsg == null
-                    || !TryParseJettonTransferNotification(tx.InMsg, out var jettonWalletAddress, out var queryId, out var userWalletAddres, out var amount))
-                {
-                    db.Insert(ptx);
-                    logger.LogDebug("Pot {Key} tx {Hash} at {Time} is not a jetton transfer, ignored", pot.Key, ptx.Hash, ptx.Notified);
-                    continue;
-                }
-
-                jettonWalletAddress = AddressConverter.ToContract(jettonWalletAddress);
-                userWalletAddres = AddressConverter.ToUser(userWalletAddres);
-
-                if (jettonWalletAddress != pot.JettonWallet)
-                {
-                    ptx.State = PotTransactionState.FakeTransfer;
-                    db.Insert(ptx);
-                    logger.LogDebug("Pot {Key} tx {Hash} at {Time} is a FAKE jetton transfer (from unknown {Address}), ignored", pot.Key, ptx.Hash, ptx.Notified, jettonWalletAddress);
-                    continue;
-                }
-
-                ptx.State = PotTransactionState.Processing;
-                ptx.Sender = userWalletAddres;
-                ptx.Amount = (decimal)amount / (decimal)Math.Pow(10, 9);
-                db.Insert(ptx);
-                logger.LogInformation("Pot {Key} tx {Hash} at {Time} found new jetton transfer (user {Address})", pot.Key, ptx.Hash, ptx.Notified, ptx.Sender);
-                foundNew = true;
-            }
-
-            pot.SyncLt = state.LastTransactionId.Lt;
-            pot.SyncUtime = state.SyncUtime;
-            db.Update(pot);
-            logger.LogInformation("Pot {Key} updated to lt={Lt}, sync {Time}", pot.Key, pot.SyncLt, pot.SyncUtime);
-
-            return foundNew;
         }
 
         public bool TryParseJettonTransferNotification(

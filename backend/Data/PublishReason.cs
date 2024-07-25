@@ -4,6 +4,10 @@
     {
         Unknown = 0,
 
-        PotCreated = 1,
+        PotCharged = 1,
+
+        PotActivated = 2,
+
+        PotStolen = 3,
     }
 }

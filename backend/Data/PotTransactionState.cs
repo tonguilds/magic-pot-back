@@ -20,16 +20,31 @@
         /// <summary>
         /// Charge transaction (from creator, with initial coins).
         /// </summary>
-        Charge = 3,
+        Charge = 30,
 
         /// <summary>
         /// Failed charge transaction (from creator, but less coins than needed).
         /// </summary>
-        TooSmallForCharge = 4,
+        TooSmallForCharge = 31,
 
         /// <summary>
         /// Other user sent coins before pot had been charged.
         /// </summary>
-        BeforeCharge = 5,
+        BeforeCharge = 32,
+
+        /// <summary>
+        /// Transaction is a valid bet.
+        /// </summary>
+        Bet = 40,
+
+        /// <summary>
+        /// Transaction value is less than required.
+        /// </summary>
+        TooSmallForBet = 41,
+
+        /// <summary>
+        /// Transaction arrived after the Pot had been stolen.
+        /// </summary>
+        AfterStolen = 51,
     }
 }

@@ -101,6 +101,8 @@
         [NotNull]
         public uint TxSizeIncrease { get; set; }
 
+        public uint TxCount { get; set; }
+
         [NotNull]
         public uint CreatorPercent { get; set; }
 
@@ -151,6 +153,15 @@
             else
             {
                 NextUpdate = now.AddMinutes(42);
+            }
+
+            if (Stolen == null && LastTx != null)
+            {
+                var end = LastTx.Value.Add(Countdown);
+                if (NextUpdate > end)
+                {
+                    NextUpdate = end;
+                }
             }
         }
     }
