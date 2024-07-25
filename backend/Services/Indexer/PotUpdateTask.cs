@@ -139,6 +139,7 @@
 
             pot.SyncLt = lastTransaction.Lt;
             pot.SyncUtime = syncTime;
+            pot.Touch();
             db.Update(pot);
             logger.LogInformation("Pot {Key} updated to lt={Lt}, sync {Time}", pot.Key, pot.SyncLt, pot.SyncUtime);
 
@@ -225,6 +226,7 @@
                 }
 
                 pot.TotalSize += tx.Amount;
+                pot.Touch();
                 db.Update(pot);
             }
 
@@ -251,6 +253,7 @@
             if (pot.LastTx != null && pot.LastTx.Value.Add(pot.Countdown) < DateTimeOffset.UtcNow)
             {
                 pot.Stolen = pot.LastTx.Value.Add(pot.Countdown);
+                pot.Touch();
                 dbProvider.MainDb.Update(pot);
                 dbProvider.MainDb.Insert(PublishQueueItem.Create(pot.Id, PublishReason.PotStolen));
                 return true;
