@@ -250,7 +250,7 @@
 
         protected bool CheckForStolen(Pot pot)
         {
-            if (pot.LastTx != null && pot.LastTx.Value.Add(pot.Countdown) < DateTimeOffset.UtcNow)
+            if (pot.Stolen == null && pot.LastTx != null && pot.LastTx.Value.Add(pot.Countdown) < DateTimeOffset.UtcNow)
             {
                 pot.Stolen = pot.LastTx.Value.Add(pot.Countdown);
                 pot.Touch();
