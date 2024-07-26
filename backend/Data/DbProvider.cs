@@ -122,7 +122,7 @@
         protected void UpdateDb(SQLiteConnection connection)
         {
             const int minVersion = 5;
-            const int lastVersion = 6;
+            const int lastVersion = 7;
 
             var ver = connection.Find<Settings>(Settings.KeyDbVersion)?.IntValue ?? 0;
 
@@ -141,6 +141,14 @@
             {
                 logger.LogInformation("Upgrading from version {Version}...", ver);
                 connection.Execute("UPDATE [Pot] SET TxCount = 0 WHERE TxCount IS NULL");
+                connection.InsertOrReplace(new Settings(Settings.KeyDbVersion, ++ver));
+                logger.LogInformation("Upgraded to ver.{Version}", ver);
+            }
+
+            if (ver == 6)
+            {
+                logger.LogInformation("Upgrading from version {Version}...", ver);
+                connection.Execute("ALTER TABLE [Pot] DROP COLUMN [State]");
                 connection.InsertOrReplace(new Settings(Settings.KeyDbVersion, ++ver));
                 logger.LogInformation("Upgraded to ver.{Version}", ver);
             }

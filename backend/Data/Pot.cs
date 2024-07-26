@@ -65,9 +65,6 @@
         public decimal TotalSize { get; set; }
 
         [NotNull]
-        public PotState State { get; set; }
-
-        [NotNull]
         public DateTimeOffset Touched { get; set; }
 
         [NotNull]
@@ -101,6 +98,7 @@
         [NotNull]
         public uint TxSizeIncrease { get; set; }
 
+        [NotNull]
         public uint TxCount { get; set; }
 
         [NotNull]

@@ -394,7 +394,6 @@
                 JettonWallet = string.Empty,
                 InitialSize = model.InitialSize,
                 TotalSize = 0,
-                State = PotState.Created,
                 Created = DateTimeOffset.UtcNow,
                 Countdown = TimeSpan.FromMinutes(model.CountdownTimerMinutes),
                 TxSizeNext = model.TransactionSize,
