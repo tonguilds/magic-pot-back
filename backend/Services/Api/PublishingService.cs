@@ -142,7 +142,7 @@ Size: *{pot.InitialSize.ToString("N0", DefaultCulture)} {MarkdownEscape(jetton.S
         {
             return @$"{Emoji.SlotMachine} *{MarkdownEscape(pot.Name)}* has been stolen\!
 
-{Emoji.MoneyBag} *{pot.TotalSize.ToString("N0", DefaultCulture)} {MarkdownEscape(jetton.Symbol)}* will be delivered soon to winner's wallets.";
+{Emoji.MoneyBag} *{pot.TotalSize.ToString("N0", DefaultCulture)} {MarkdownEscape(jetton.Symbol)}* will be delivered soon to winner's wallets\.";
         }
 
         protected static (object Data, string Path) CreatePotMessage(string text, Pot pot, BackendOptions options)
