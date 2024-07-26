@@ -8,13 +8,12 @@
     using TonLibDotNet.Types.Msg;
     using TonLibDotNet.Utils;
 
-    public class BlockchainReader(ILogger<BlockchainReader> logger, ITonClient tonClient)
+    public class BlockchainReader(ITonClient tonClient)
     {
         public async Task<long> EnsureSynced(long lastKnownSeqno = 0)
         {
             await tonClient.InitIfNeeded();
             var blockId = await tonClient.Sync();
-            logger.LogDebug("Synced to masterchain block {Seqno}.", blockId.Seqno);
 
             if (blockId.Seqno < lastKnownSeqno)
             {

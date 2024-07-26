@@ -1,9 +1,10 @@
 ﻿namespace MagicPot.Backend.Services.Indexer
 {
     using MagicPot.Backend.Data;
+    using Microsoft.Extensions.Logging;
     using RecurrentTasks;
 
-    public class SyncTask(IDbProvider dbProvider, BlockchainReader blockchainReader)
+    public class SyncTask(ILogger<SyncTask> logger, IDbProvider dbProvider, BlockchainReader blockchainReader)
         : IRunnable
     {
         public static readonly TimeSpan DefaultInterval = TimeSpan.FromMinutes(5);
@@ -26,6 +27,11 @@
                 lastSeqno ??= new Settings(Settings.KeyLastSeqno, 0L);
                 lastSeqno.LongValue = seqno;
                 dbProvider.MainDb.InsertOrReplace(lastSeqno);
+                logger.LogDebug("Synced to masterchain block {Seqno}.", seqno);
+            }
+            else
+            {
+                logger.LogTrace("Synced to masterchain block {Seqno}.", seqno);
             }
         }
 
