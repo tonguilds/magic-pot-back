@@ -152,9 +152,9 @@
 
             var jetton = db.Get<Jetton>(x => x.Address == pot.JettonMaster);
             var ujw = db.Get<UserJettonWallet>(x => x.MainWallet == pot.OwnerUserAddress && x.JettonMaster == pot.JettonMaster);
-            var txInfo = PrepareTxInfo(pot, jetton, ujw.JettonWallet!);
+            var (txAmount, txPayload) = PrepareTxInfo(pot, jetton);
 
-            return new NewPotInfo(pot.Key, txInfo.RawAddress, txInfo.Amount, txInfo.Payload);
+            return new NewPotInfo(pot.Key, ujw.JettonWallet!, txAmount, txPayload);
         }
 
         /// <summary>
@@ -212,11 +212,11 @@
             var user = lazyDbProvider.Value.GetOrCreateUser(tgUser);
 
             var pot = await CreatePot(model, user.Id, jetton!.Address, coverImage, coverImageAnimated);
-            var txInfo = PrepareTxInfo(pot, jetton, userJettonAddress!);
+            var (txAmount, txPayload) = PrepareTxInfo(pot, jetton);
 
             logger.LogInformation("New Pot created: {Key} by #{UserId} / @{User} for {Amount} {Symbol}", pot.Key, user.Id, user.Username, pot.InitialSize, jetton.Symbol);
 
-            return new NewPotInfo(pot.Key, txInfo.RawAddress, txInfo.Amount, txInfo.Payload);
+            return new NewPotInfo(pot.Key, userJettonAddress!, txAmount, txPayload);
         }
 
         protected async Task<(Jetton? Jetton, string? UserJettonWallet)> ValidateJetton(NewPotModel model)
@@ -433,9 +433,8 @@
             return pot;
         }
 
-        protected (string RawAddress, long Amount, string Payload) PrepareTxInfo(Pot pot, Jetton jetton, string userJettonAddress)
+        protected (long Amount, string Payload) PrepareTxInfo(Pot pot, Jetton jetton)
         {
-            var rawAddress = userJettonAddress;
             var tonAmount = TonLibDotNet.Utils.CoinUtils.Instance.ToNano(cachedData.Options.TonAmountForGas + cachedData.Options.TonAmountForInterest);
             var jettonAmount = (BigInteger)pot.InitialSize * (BigInteger)Math.Pow(10, jetton.Decimals);
             var payload = TonLibDotNet.Recipes.Tep74Jettons.Instance.CreateTransferCell(
@@ -447,7 +446,7 @@
                 cachedData.Options.TonAmountForInterest,
                 null);
 
-            return (rawAddress, tonAmount, payload.ToBoc().SerializeToBase64());
+            return (tonAmount, payload.ToBoc().SerializeToBase64());
         }
 
         public record CheckResult(bool Valid, IDictionary<string, string[]>? Errors);
