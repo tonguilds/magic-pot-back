@@ -117,7 +117,7 @@
         public uint RandomTxCount { get; set; }
 
         [NotNull]
-        public uint ReferralsPercent { get; set; }
+        public uint ReferrersPercent { get; set; }
 
         [NotNull]
         public uint BurnPercent { get; set; }

@@ -4,6 +4,7 @@
     using System.Net.Mime;
     using MagicPot.Backend.Attributes;
     using MagicPot.Backend.Data;
+    using MagicPot.Backend.Models;
     using MagicPot.Backend.Services.Api;
     using Microsoft.AspNetCore.Mvc;
     using Swashbuckle.AspNetCore.Annotations;

@@ -1,4 +1,4 @@
-﻿namespace MagicPot.Backend.Controllers
+﻿namespace MagicPot.Backend.Models
 {
     public class NewPotWithCoverModel : NewPotModel
     {

@@ -5,6 +5,7 @@
     using System.Numerics;
     using MagicPot.Backend.Attributes;
     using MagicPot.Backend.Data;
+    using MagicPot.Backend.Models;
     using MagicPot.Backend.Services;
     using MagicPot.Backend.Services.Api;
     using MagicPot.Backend.Utils;
@@ -46,20 +47,31 @@
         /// <returns>Check result: status and list of errors.</returns>
         [HttpPost]
         [Consumes(MediaTypeNames.Application.Json)]
-        public async Task<CheckResult> CheckNewPotAsJson(
+        public async Task<CheckPotResult> CheckNewPotAsJson(
             [Required(AllowEmptyStrings = false), InitDataValidation, FromHeader(Name = BackendOptions.TelegramInitDataHeaderName)] string initData,
             [Required] NewPotWithCoverModel model)
         {
             if (!ModelState.IsValid)
             {
-                return new CheckResult(false, new ValidationProblemDetails(ModelState).Errors);
+                return new CheckPotResult() { Errors = new ValidationProblemDetails(ModelState).Errors };
             }
 
-            await ValidateJetton(model);
+            var jetton = await ValidateJetton(model);
+            if (jetton == null)
+            {
+                return new CheckPotResult() { Errors = new ValidationProblemDetails(ModelState).Errors };
+            }
+
+            var ujw = ValidateUserJettonWallet(model);
+
             (var ms, _) = await ValidateCoverImage(model.CoverImage, null, nameof(model.CoverImage));
             ms?.Dispose();
 
-            return ModelState.IsValid ? new CheckResult(true, null) : new CheckResult(false, new ValidationProblemDetails(ModelState).Errors);
+            return new CheckPotResult()
+            {
+                Errors = ModelState.IsValid ? null : new ValidationProblemDetails(ModelState).Errors,
+                IsValidatingWallet = string.IsNullOrEmpty(ujw),
+            };
         }
 
         /// <summary>
@@ -71,21 +83,32 @@
         /// <returns>Check result: status and list of errors.</returns>
         [HttpPost]
         [Consumes(MediaTypeNames.Multipart.FormData)]
-        public async Task<CheckResult> CheckNewPotAsForm(
+        public async Task<CheckPotResult> CheckNewPotAsForm(
             [Required(AllowEmptyStrings = false), InitDataValidation, FromHeader(Name = BackendOptions.TelegramInitDataHeaderName)] string initData,
             [Required, FromForm] NewPotModel model,
             IFormFile? coverImage)
         {
             if (!ModelState.IsValid)
             {
-                return new CheckResult(false, new ValidationProblemDetails(ModelState).Errors);
+                return new CheckPotResult() { Errors = new ValidationProblemDetails(ModelState).Errors };
             }
 
-            await ValidateJetton(model);
+            var jetton = await ValidateJetton(model);
+            if (jetton == null)
+            {
+                return new CheckPotResult() { Errors = new ValidationProblemDetails(ModelState).Errors };
+            }
+
+            var ujw = ValidateUserJettonWallet(model);
+
             (var ms, _) = await ValidateCoverImage(null, coverImage, nameof(coverImage));
             ms?.Dispose();
 
-            return ModelState.IsValid ? new CheckResult(true, null) : new CheckResult(false, new ValidationProblemDetails(ModelState).Errors);
+            return new CheckPotResult()
+            {
+                Errors = ModelState.IsValid ? null : new ValidationProblemDetails(ModelState).Errors,
+                IsValidatingWallet = string.IsNullOrEmpty(ujw),
+            };
         }
 
         /// <summary>
@@ -96,7 +119,7 @@
         /// <returns>Pot string key (for future usage) and transaction data for user to send initial prize.</returns>
         [HttpPost]
         [Consumes(MediaTypeNames.Application.Json)]
-        public async Task<ActionResult<NewPotInfo>> CreateNewPotAsJson(
+        public async Task<CreatePotResult> CreateNewPotAsJson(
             [Required(AllowEmptyStrings = false), InitDataValidation, FromHeader(Name = BackendOptions.TelegramInitDataHeaderName)] string initData,
             [Required] NewPotWithCoverModel model)
         {
@@ -114,7 +137,7 @@
         /// <returns>Pot string key (for future usage) and transaction data for user to send initial prize.</returns>
         [HttpPost]
         [Consumes(MediaTypeNames.Multipart.FormData)]
-        public async Task<ActionResult<NewPotInfo>> CreateNewPotAsForm(
+        public async Task<CreatePotResult> CreateNewPotAsForm(
             [Required(AllowEmptyStrings = false), InitDataValidation, FromHeader(Name = BackendOptions.TelegramInitDataHeaderName)] string initData,
             [Required, FromForm] NewPotModel model,
             IFormFile? coverImage)
@@ -133,7 +156,7 @@
         /// <remarks>User must be an owner of requested pot, otherwise error 404 will be returned.</remarks>
         [HttpGet("{key:minlength(3)}")]
         [SwaggerResponse(404, "Pot with specified key not found or not owned by specified user.")]
-        public ActionResult<NewPotInfo> GetSendPrizeTransactionData(
+        public ActionResult<TonConnectTransactionInfo> GetSendPrizeTransactionData(
             [Required(AllowEmptyStrings = false), InitDataValidation, FromHeader(Name = BackendOptions.TelegramInitDataHeaderName)] string initData,
             [Required(AllowEmptyStrings = false)] string key)
         {
@@ -154,7 +177,7 @@
             var ujw = db.Get<UserJettonWallet>(x => x.MainWallet == pot.OwnerUserAddress && x.JettonMaster == pot.JettonMaster);
             var (txAmount, txPayload) = PrepareTxInfo(pot, jetton);
 
-            return new NewPotInfo(pot.Key, ujw.JettonWallet!, txAmount, txPayload);
+            return new TonConnectTransactionInfo(ujw.JettonWallet!, txAmount, txPayload);
         }
 
         /// <summary>
@@ -193,18 +216,28 @@
             return Ok();
         }
 
-        protected async Task<ActionResult<NewPotInfo>> CreateNewPot(string initData, NewPotModel model, MemoryStream? coverImage, bool coverImageAnimated)
+        protected async Task<CreatePotResult> CreateNewPot(string initData, NewPotModel model, MemoryStream? coverImage, bool coverImageAnimated)
         {
             if (!ModelState.IsValid)
             {
-                return new BadRequestObjectResult(new ValidationProblemDetails(ModelState));
+                return new CreatePotResult() { Errors = new ValidationProblemDetails(ModelState).Errors };
             }
 
-            var (jetton, userJettonAddress) = await ValidateJetton(model);
+            var jetton = await ValidateJetton(model);
+            if (jetton == null)
+            {
+                return new CreatePotResult() { Errors = new ValidationProblemDetails(ModelState).Errors };
+            }
+
+            var ujw = ValidateUserJettonWallet(model);
+            if (string.IsNullOrEmpty(ujw))
+            {
+                return new CreatePotResult() { IsValidatingWallet = true };
+            }
 
             if (!ModelState.IsValid)
             {
-                return new BadRequestObjectResult(new ValidationProblemDetails(ModelState));
+                return new CreatePotResult() { Errors = new ValidationProblemDetails(ModelState).Errors };
             }
 
             var tgUser = InitDataValidationAttribute.GetUserDataWithoutValidation(initData);
@@ -216,14 +249,14 @@
 
             logger.LogInformation("New Pot created: {Key} by #{UserId} / @{User} for {Amount} {Symbol}", pot.Key, user.Id, user.Username, pot.InitialSize, jetton.Symbol);
 
-            return new NewPotInfo(pot.Key, userJettonAddress!, txAmount, txPayload);
+            return new CreatePotResult() { Key = pot.Key, TransactionInfo = new(ujw!, txAmount, txPayload) };
         }
 
-        protected async Task<(Jetton? Jetton, string? UserJettonWallet)> ValidateJetton(NewPotModel model)
+        protected async Task<Jetton?> ValidateJetton(NewPotModel model)
         {
             if (string.IsNullOrWhiteSpace(model.TokenAddress))
             {
-                return (null, null);
+                return null;
             }
 
             model.TokenAddress = AddressConverter.ToContract(model.TokenAddress);
@@ -237,7 +270,7 @@
                 if (jetton == null)
                 {
                     ModelState.AddModelError(nameof(model.TokenAddress), Messages.AddressIsNotAJetton);
-                    return (null, null);
+                    return null;
                 }
 
                 var existing = db.Find<Jetton>(x => x.Address == jetton.Address);
@@ -250,20 +283,27 @@
                 notificationService.TryRun<CachedData>();
             }
 
+            return jetton;
+        }
+
+        protected string? ValidateUserJettonWallet(NewPotModel model)
+        {
             if (string.IsNullOrWhiteSpace(model.UserAddress))
             {
-                return (null, null);
+                return null;
             }
 
             model.UserAddress = AddressConverter.ToUser(model.UserAddress);
 
-            var ujw = db.Find<UserJettonWallet>(x => x.MainWallet == model.UserAddress && x.JettonMaster == jetton.Address);
+            var db = lazyDbProvider.Value.MainDb;
+
+            var ujw = db.Find<UserJettonWallet>(x => x.MainWallet == model.UserAddress && x.JettonMaster == model.TokenAddress);
             if (ujw == null)
             {
                 ujw = new UserJettonWallet()
                 {
                     MainWallet = model.UserAddress,
-                    JettonMaster = jetton.Address,
+                    JettonMaster = model.TokenAddress,
                 };
 
                 db.Insert(ujw);
@@ -279,17 +319,15 @@
             if (string.IsNullOrWhiteSpace(ujw.JettonWallet))
             {
                 notificationService.TryRun<Services.Indexer.DetectUserJettonAddressesTask>();
-                ModelState.AddModelError(Messages.ValidatingUserJettonWalletFieldName, Messages.ValidatingUserJettonWallet);
-                return (null, null);
+                return null;
             }
 
             if (ujw.Balance < model.InitialSize)
             {
                 ModelState.AddModelError(nameof(model.InitialSize), Messages.UnsufficientJettonAmount);
-                return (null, null);
             }
 
-            return (jetton, ujw.JettonWallet);
+            return ujw.JettonWallet;
         }
 
         protected async Task<(MemoryStream? Image, bool Animated)> ValidateCoverImage(string? dataUrl, IFormFile? file, string paramName)
@@ -403,7 +441,7 @@
                 LastTxCount = model.LastTransactionsCount ?? 0,
                 RandomTxPercent = model.RandomTransactionsPercent ?? 0,
                 RandomTxCount = model.RandomTransactionsCount ?? 0,
-                ReferralsPercent = model.ReferralsPercent ?? 0,
+                ReferrersPercent = model.ReferrersPercent ?? 0,
                 BurnPercent = model.BurnPercent ?? 0,
             };
 
@@ -448,10 +486,6 @@
 
             return (tonAmount, payload.ToBoc().SerializeToBase64());
         }
-
-        public record CheckResult(bool Valid, IDictionary<string, string[]>? Errors);
-
-        public record NewPotInfo(string Key, string TxAddress, long TxAmount, string TxPayload);
 
         public class CreateNewPotException(string message)
             : Exception(message)

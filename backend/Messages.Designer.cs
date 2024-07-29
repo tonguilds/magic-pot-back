@@ -88,6 +88,15 @@ namespace MagicPot.Backend {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Amount is less than next pot transaction size..
+        /// </summary>
+        public static string TxAmountIsLessThanRequired {
+            get {
+                return ResourceManager.GetString("TxAmountIsLessThanRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to You have no enough jettons in your wallet..
         /// </summary>
         public static string UnsufficientJettonAmount {
@@ -97,20 +106,11 @@ namespace MagicPot.Backend {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Validating your jetton wallet... Please retry in 5-10 seconds..
+        ///   Looks up a localized string similar to User jetton wallet has not been validated..
         /// </summary>
-        public static string ValidatingUserJettonWallet {
+        public static string UserJettonWalletNotValidatedYet {
             get {
-                return ResourceManager.GetString("ValidatingUserJettonWallet", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to tokenAddressValidating.
-        /// </summary>
-        public static string ValidatingUserJettonWalletFieldName {
-            get {
-                return ResourceManager.GetString("ValidatingUserJettonWalletFieldName", resourceCulture);
+                return ResourceManager.GetString("UserJettonWalletNotValidatedYet", resourceCulture);
             }
         }
         

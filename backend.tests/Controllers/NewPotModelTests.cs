@@ -2,6 +2,7 @@
 {
     using System.ComponentModel.DataAnnotations;
     using System.Runtime.CompilerServices;
+    using MagicPot.Backend.Models;
     using Xunit;
 
     public class NewPotModelTests
@@ -24,7 +25,7 @@
             LastTransactionsCount = 10,
             RandomTransactionsPercent = 20,
             RandomTransactionsCount = 10,
-            ReferralsPercent = 20,
+            ReferrersPercent = 20,
             BurnPercent = 20,
         };
 
@@ -122,7 +123,7 @@
             model.LastTransactionsCount = (uint?)val2 / 10;
             model.RandomTransactionsPercent = (uint?)val3;
             model.RandomTransactionsCount = (uint?)val3 / 10;
-            model.ReferralsPercent = (uint?)val4;
+            model.ReferrersPercent = (uint?)val4;
             model.BurnPercent = (uint?)val5;
 
             var errors = new List<ValidationResult>();
@@ -140,7 +141,7 @@
             model.CreatorPercent = (uint?)val1;
             model.LastTransactionsPercent = (uint?)val2;
             model.RandomTransactionsPercent = (uint?)val3;
-            model.ReferralsPercent = (uint?)val4;
+            model.ReferrersPercent = (uint?)val4;
             model.BurnPercent = (uint?)val5;
 
             var errors = new List<ValidationResult>();
@@ -165,7 +166,7 @@
 
             if (val4.HasValue)
             {
-                Assert.Contains(errors, x => x.MemberNames.Contains(nameof(model.ReferralsPercent)));
+                Assert.Contains(errors, x => x.MemberNames.Contains(nameof(model.ReferrersPercent)));
             }
 
             if (val5.HasValue)
@@ -182,7 +183,7 @@
             model.CreatorPercent = null;
             model.LastTransactionsPercent = null;
             model.RandomTransactionsPercent = null;
-            model.ReferralsPercent = null;
+            model.ReferrersPercent = null;
             model.BurnPercent = null;
 
             var errors = new List<ValidationResult>();
@@ -193,7 +194,7 @@
             Assert.Contains(errors, x => x.MemberNames.Contains(nameof(model.CreatorPercent)));
             Assert.Contains(errors, x => x.MemberNames.Contains(nameof(model.LastTransactionsPercent)));
             Assert.Contains(errors, x => x.MemberNames.Contains(nameof(model.RandomTransactionsPercent)));
-            Assert.Contains(errors, x => x.MemberNames.Contains(nameof(model.ReferralsPercent)));
+            Assert.Contains(errors, x => x.MemberNames.Contains(nameof(model.ReferrersPercent)));
             Assert.Contains(errors, x => x.MemberNames.Contains(nameof(model.BurnPercent)));
 
             Assert.False(result);
@@ -219,7 +220,7 @@
             model.LastTransactionsPercent = null;
             model.LastTransactionsCount = 10;
             model.RandomTransactionsPercent = 25;
-            model.ReferralsPercent = 25;
+            model.ReferrersPercent = 25;
             model.BurnPercent = 25;
 
             var errors = new List<ValidationResult>();
@@ -250,7 +251,7 @@
             model.LastTransactionsPercent = 25;
             model.RandomTransactionsPercent = null;
             model.RandomTransactionsCount = 10;
-            model.ReferralsPercent = 25;
+            model.ReferrersPercent = 25;
             model.BurnPercent = 25;
 
             var errors = new List<ValidationResult>();

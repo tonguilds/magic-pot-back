@@ -1,4 +1,4 @@
-﻿namespace MagicPot.Backend.Controllers
+﻿namespace MagicPot.Backend.Models
 {
     using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
@@ -45,7 +45,7 @@
         /// Countdown time (in minutes).
         /// </summary>
         [Required]
-        [Range(1, (99 * 60) + 59, ConvertValueInInvariantCulture = true, ErrorMessageResourceType = typeof(Messages), ErrorMessageResourceName = nameof(Messages.MaxValueIs99h59m))]
+        [Range(1, 99 * 60 + 59, ConvertValueInInvariantCulture = true, ErrorMessageResourceType = typeof(Messages), ErrorMessageResourceName = nameof(Messages.MaxValueIs99h59m))]
         public uint CountdownTimerMinutes { get; set; }
 
         /// <summary>
@@ -95,7 +95,7 @@
         /// Percentage of prize that referrals of winners will receive, or null to recieve nothing.
         /// </summary>
         [Range(1, 100, ConvertValueInInvariantCulture = true)]
-        public uint? ReferralsPercent { get; set; }
+        public uint? ReferrersPercent { get; set; }
 
         /// <summary>
         /// Percentage of prize that will be burned, or null to burn nothing.
@@ -105,7 +105,7 @@
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
-            var sharesSum = (CreatorPercent ?? 0) + (LastTransactionsPercent ?? 0) + (RandomTransactionsPercent ?? 0) + (ReferralsPercent ?? 0) + (BurnPercent ?? 0);
+            var sharesSum = (CreatorPercent ?? 0) + (LastTransactionsPercent ?? 0) + (RandomTransactionsPercent ?? 0) + (ReferrersPercent ?? 0) + (BurnPercent ?? 0);
             var sharesOk = sharesSum == 100;
 
             if (!sharesOk)
@@ -125,9 +125,9 @@
                     yield return new ValidationResult(Messages.SumOfSharesMustBe100, [nameof(RandomTransactionsPercent)]);
                 }
 
-                if (ReferralsPercent.HasValue || sharesSum == 0)
+                if (ReferrersPercent.HasValue || sharesSum == 0)
                 {
-                    yield return new ValidationResult(Messages.SumOfSharesMustBe100, [nameof(ReferralsPercent)]);
+                    yield return new ValidationResult(Messages.SumOfSharesMustBe100, [nameof(ReferrersPercent)]);
                 }
 
                 if (BurnPercent.HasValue || sharesSum == 0)

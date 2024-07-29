@@ -23,6 +23,8 @@
 
         public Dictionary<long, User> ActivePotOwners { get; private set; } = [];
 
+        public Dictionary<long, List<PotTransaction>> ActivePotTransactions { get; private set; } = [];
+
         public Task RunAsync(ITask currentTask, IServiceProvider scopeServiceProvider, CancellationToken cancellationToken)
         {
             Options = scopeServiceProvider.GetRequiredService<IOptionsSnapshot<BackendOptions>>().Value;
@@ -44,14 +46,28 @@
             var ownerIds = ActivePots.Select(x => x.Value.OwnerUserId).Distinct().ToArray();
             ActivePotOwners = db.Table<User>().Where(x => ownerIds.Contains(x.Id)).ToDictionary(x => x.Id);
 
+            var txCount = 0;
+            ActivePotTransactions.Clear();
+            foreach (var id in ActivePots.Values.Select(x => x.Id))
+            {
+                var txList = db.Table<PotTransaction>()
+                    .Where(x => x.PotId == id && x.State == PotTransactionState.Bet)
+                    .OrderByDescending(x => x.Notified)
+                    .Take(10)
+                    .ToList();
+                ActivePotTransactions[id] = txList;
+                txCount += txList.Count;
+            }
+
             var logger = scopeServiceProvider.GetRequiredService<ILogger<CachedData>>();
             logger.LogDebug(
-                "Reloaded: KnownJettons={Count1}, ActivePots={Count2}, TotalPotKeys={Count3}, TotalUsers={Total}, ActivePotOwners={Count4}",
+                "Reloaded: KnownJettons={Count1}, ActivePots={Count2}, TotalPotKeys={Count3}, TotalUsers={Total}, ActivePotOwners={Count4}, LastTx={Count5}",
                 AllJettons.Count,
                 ActivePots.Count,
                 AllPotKeys.Count,
                 TotalUsers,
-                ActivePotOwners.Count);
+                ActivePotOwners.Count,
+                txCount);
 
             return Task.CompletedTask;
         }

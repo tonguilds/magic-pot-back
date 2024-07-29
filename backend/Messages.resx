@@ -126,14 +126,14 @@
   <data name="SumOfSharesMustBe100" xml:space="preserve">
     <value>Sum of all shares must be equal to 100.</value>
   </data>
+  <data name="TxAmountIsLessThanRequired" xml:space="preserve">
+    <value>Amount is less than next pot transaction size.</value>
+  </data>
   <data name="UnsufficientJettonAmount" xml:space="preserve">
     <value>You have no enough jettons in your wallet.</value>
   </data>
-  <data name="ValidatingUserJettonWallet" xml:space="preserve">
-    <value>Validating your jetton wallet... Please retry in 5-10 seconds.</value>
-  </data>
-  <data name="ValidatingUserJettonWalletFieldName" xml:space="preserve">
-    <value>tokenAddressValidating</value>
+  <data name="UserJettonWalletNotValidatedYet" xml:space="preserve">
+    <value>User jetton wallet has not been validated.</value>
   </data>
   <data name="ValuesInconsistentLastTransactions" xml:space="preserve">
     <value>Last players percent and number must be both set or both empty.</value>

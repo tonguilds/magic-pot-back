@@ -1,4 +1,4 @@
-﻿namespace MagicPot.Backend.Controllers
+﻿namespace MagicPot.Backend.Models
 {
     using MagicPot.Backend.Data;
 
@@ -7,6 +7,10 @@
         public string Key { get; set; } = string.Empty;
 
         public string Name { get; set; } = string.Empty;
+
+        public string Address { get; set; } = string.Empty;
+
+        public long CreatorId { get; set; }
 
         public string? CreatorName { get; set; } = string.Empty;
 
@@ -24,7 +28,13 @@
 
         public string? JettonImage { get; set; }
 
-        public bool WaitingForPrizeTransacton { get; set; }
+        public bool IsWaitingForPrizeTransacton { get; set; }
+
+        public bool IsStarted { get; set; }
+
+        public bool IsEnded { get; set; }
+
+        public DateTimeOffset? EndsAt { get; set; }
 
         public PotRules Rules { get; set; } = new();
 
@@ -34,6 +44,8 @@
             {
                 Key = pot.Key,
                 Name = pot.Name,
+                Address = pot.Address,
+                CreatorId = user.Id,
                 CreatorName = user.FirstName,
                 CreatorUsername = user.Username,
                 CoverImage = pot.CoverImage,
@@ -42,7 +54,10 @@
                 NextTransactionSize = pot.TxSizeNext,
                 JettonSymbol = jetton.Symbol,
                 JettonImage = jetton.Image,
-                WaitingForPrizeTransacton = !pot.Charged.HasValue,
+                IsWaitingForPrizeTransacton = !pot.Charged.HasValue,
+                IsStarted = pot.FirstTx.HasValue,
+                IsEnded = pot.Stolen.HasValue,
+                EndsAt = pot.Stolen ?? pot.LastTx?.Add(pot.Countdown),
                 Rules = new()
                 {
                     Countdown = (int)pot.Countdown.TotalMinutes,
@@ -52,7 +67,7 @@
                     LastTransactionsCount = pot.LastTxCount,
                     RandomTransactionsPercent = pot.RandomTxPercent,
                     RandomTransactionsCount = pot.RandomTxCount,
-                    ReferralsPercent = pot.ReferralsPercent,
+                    ReferrersPercent = pot.ReferrersPercent,
                     BurnPercent = pot.BurnPercent,
                 },
             };
@@ -77,7 +92,7 @@
 
             public uint RandomTransactionsCount { get; set; }
 
-            public uint ReferralsPercent { get; set; }
+            public uint ReferrersPercent { get; set; }
 
             public uint BurnPercent { get; set; }
         }
