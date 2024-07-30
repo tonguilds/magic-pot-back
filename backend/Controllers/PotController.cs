@@ -149,12 +149,12 @@
 
             var jetton = cachedData.AllJettons[pot.JettonMaster];
 
-            var (txAmount, txPayload) = PrepareTxInfo(pot, jetton, model.Amount ?? pot.TxSizeNext, tgUser.Id);
+            var (txAmount, txPayload) = PrepareTxInfo(pot, jetton, model.UserAddress, model.Amount ?? pot.TxSizeNext, tgUser.Id);
 
-            return new CreateTransactionResult() { TransactionInfo = new(pot.JettonWallet!, txAmount, txPayload) };
+            return new CreateTransactionResult() { TransactionInfo = new(ujw.JettonWallet!, txAmount, txPayload) };
         }
 
-        protected (long Amount, string Payload) PrepareTxInfo(Pot pot, Jetton jetton, decimal amount, long userId)
+        protected (long Amount, string Payload) PrepareTxInfo(Pot pot, Jetton jetton, string userAddress, decimal amount, long userId)
         {
             var tonAmount = TonLibDotNet.Utils.CoinUtils.Instance.ToNano(cachedData.Options.TonAmountForGas + cachedData.Options.TonAmountForInterest);
             var jettonAmount = (BigInteger)amount * (BigInteger)Math.Pow(10, jetton.Decimals);
@@ -163,7 +163,7 @@
                 (ulong)pot.Id,
                 jettonAmount,
                 pot.Address,
-                pot.OwnerUserAddress,
+                userAddress,
                 null,
                 cachedData.Options.TonAmountForInterest,
                 forwardPayload);
