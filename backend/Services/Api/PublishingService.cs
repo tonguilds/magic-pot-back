@@ -121,7 +121,7 @@
 
         protected static string CreateLinkToPot(string key)
         {
-            return "https://t.me/magic_pot_bot?start=pot." + key;
+            return "https://t.me/magic_pot_bot/magicpot?startapp=" + key;
         }
 
         protected static string GeneratePotCreatedMessageText(Pot pot, Jetton jetton)
