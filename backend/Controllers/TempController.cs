@@ -45,7 +45,7 @@
             return pots.Select(x =>
                 {
                     var jetton = cachedData.AllJettons[x.JettonMaster];
-                    return PotInfo.Create(x, jetton, creator);
+                    return PotInfo.Create(x, jetton, creator, cachedData.ActivePotTransactions[x.Id], cachedData.ActivePotUsers);
                 })
                 .ToList();
         }
@@ -64,7 +64,7 @@
                 {
                     var jetton = cachedData.AllJettons[x.JettonMaster];
                     var creator = cachedData.ActivePotOwners[x.OwnerUserId];
-                    return PotInfo.Create(x, jetton, creator);
+                    return PotInfo.Create(x, jetton, creator, cachedData.ActivePotTransactions[x.Id], cachedData.ActivePotUsers);
                 })
                 .ToList();
         }

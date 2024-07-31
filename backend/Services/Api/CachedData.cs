@@ -23,6 +23,8 @@
 
         public Dictionary<long, User> ActivePotOwners { get; private set; } = [];
 
+        public List<User> ActivePotUsers { get; private set; } = [];
+
         public Dictionary<long, List<PotTransaction>> ActivePotTransactions { get; private set; } = [];
 
         public Task RunAsync(ITask currentTask, IServiceProvider scopeServiceProvider, CancellationToken cancellationToken)
@@ -59,14 +61,18 @@
                 txCount += txList.Count;
             }
 
+            var activePotUserIds = ActivePotTransactions.SelectMany(x => x.Value.Select(z => z.UserId)).Where(x => x != null).Distinct().ToList();
+            ActivePotUsers = db.Table<User>().Where(x => activePotUserIds.Contains(x.Id)).ToList();
+
             var logger = scopeServiceProvider.GetRequiredService<ILogger<CachedData>>();
             logger.LogDebug(
-                "Reloaded: KnownJettons={Count1}, ActivePots={Count2}, TotalPotKeys={Count3}, TotalUsers={Total}, ActivePotOwners={Count4}, LastTx={Count5}",
+                "Reloaded: KnownJettons={Count1}, ActivePots={Count2}, TotalPotKeys={Count3}, TotalUsers={Total}, ActivePotOwners={Count4}, ActivePotUsers={Count5}, LastTx={Count6}",
                 AllJettons.Count,
                 ActivePots.Count,
                 AllPotKeys.Count,
                 TotalUsers,
                 ActivePotOwners.Count,
+                ActivePotUsers.Count,
                 txCount);
 
             return Task.CompletedTask;

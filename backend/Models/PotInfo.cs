@@ -38,7 +38,9 @@
 
         public PotRules Rules { get; set; } = new();
 
-        public static PotInfo Create(Pot pot, Jetton jetton, User user)
+        public List<PotParticipant> LastParticipants { get; set; } = [];
+
+        public static PotInfo Create(Pot pot, Jetton jetton, User user, IList<PotTransaction> transactions, IList<User> knownUsers)
         {
             return new PotInfo
             {
@@ -70,6 +72,16 @@
                     ReferrersPercent = pot.ReferrersPercent,
                     BurnPercent = pot.BurnPercent,
                 },
+                LastParticipants = transactions
+                    .Select(x => new PotParticipant
+                    {
+                        TxTime = x.Notified,
+                        Address = x.Sender ?? string.Empty,
+                        UserId = x.UserId ?? 0,
+                        Name = knownUsers.FirstOrDefault(z => z.Id == x.UserId)?.FirstName,
+                        Username = knownUsers.FirstOrDefault(z => z.Id == x.UserId)?.Username,
+                    })
+                    .ToList(),
             };
         }
 
@@ -95,6 +107,19 @@
             public uint ReferrersPercent { get; set; }
 
             public uint BurnPercent { get; set; }
+        }
+
+        public class PotParticipant
+        {
+            public DateTimeOffset TxTime { get; set; }
+
+            public string Address { get; set; } = string.Empty;
+
+            public long UserId { get; set; }
+
+            public string? Name { get; set; }
+
+            public string? Username { get; set; }
         }
     }
 }
