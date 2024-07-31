@@ -57,8 +57,9 @@
 
             var jetton = cachedData.AllJettons[pot.JettonMaster];
             var creator = db.Get<User>(pot.OwnerUserId);
+            cachedData.ActivePotTransactions.TryGetValue(pot.Id, out var txlist);
 
-            return PotInfo.Create(pot, jetton, creator, cachedData.ActivePotTransactions[pot.Id], cachedData.ActivePotUsers);
+            return PotInfo.Create(pot, jetton, creator, txlist ?? [], cachedData.ActivePotUsers);
         }
 
         /// <summary>
