@@ -32,5 +32,8 @@
         public decimal Amount { get; set; }
 
         public long? UserId { get; set; }
+
+        [MaxLength(DbProvider.MaxLenAddress)]
+        public string? Referrer { get; set; }
     }
 }

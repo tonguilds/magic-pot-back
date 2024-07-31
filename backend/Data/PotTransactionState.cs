@@ -13,9 +13,14 @@
         FakeTransfer = 1,
 
         /// <summary>
+        /// Transaction is a manual jetton tranfer (forward_payload mismatch).
+        /// </summary>
+        ManualTransfer = 2,
+
+        /// <summary>
         /// Transaction is fine, and waiting for additional classification.
         /// </summary>
-        Processing = 2,
+        Processing = 10,
 
         /// <summary>
         /// Charge transaction (from creator, with initial coins).

@@ -111,7 +111,7 @@
                 };
 
                 if (tx.InMsg == null
-                    || !blockchainReader.TryParseJettonTransferNotification(tx.InMsg, out var jettonWalletAddress, out var queryId, out var userWalletAddres, out var amount))
+                    || !blockchainReader.TryParseJettonTransferNotification(tx.InMsg, out var jettonWalletAddress, out var queryId, out var userWalletAddres, out var amount, out var encodedPotId, out var encodedUserId, out var encodedReferrerAddress))
                 {
                     db.Insert(ptx);
                     logger.LogDebug("Pot {Key} tx {Hash} at {Time} is not a jetton transfer, ignored", pot.Key, ptx.Hash, ptx.Notified);
@@ -129,9 +129,19 @@
                     continue;
                 }
 
+                if (encodedPotId != pot.Id)
+                {
+                    ptx.State = PotTransactionState.ManualTransfer;
+                    db.Insert(ptx);
+                    logger.LogDebug("Pot {Key} tx {Hash} at {Time} is a MANUAL jetton transfer, ignored", pot.Key, ptx.Hash, ptx.Notified);
+                    continue;
+                }
+
                 ptx.State = PotTransactionState.Processing;
                 ptx.Sender = userWalletAddres;
                 ptx.Amount = (decimal)amount / (decimal)Math.Pow(10, jetton.Decimals);
+                ptx.UserId = encodedUserId;
+                ptx.Referrer = encodedReferrerAddress;
                 db.Insert(ptx);
                 logger.LogInformation("Pot {Key} tx {Hash} at {Time} found new jetton transfer (user {Address})", pot.Key, ptx.Hash, ptx.Notified, ptx.Sender);
                 found = true;
