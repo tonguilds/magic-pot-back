@@ -3,6 +3,7 @@
     using System.ComponentModel.DataAnnotations;
     using System.Net.Mime;
     using System.Numerics;
+    using System.Reflection;
     using MagicPot.Backend.Attributes;
     using MagicPot.Backend.Data;
     using MagicPot.Backend.Models;
@@ -160,7 +161,6 @@
         /// <param name="initData">Value of <see href="https://core.telegram.org/bots/webapps#initializing-mini-apps">initData</see> Telegram property.</param>
         /// <param name="key">Pot key.</param>
         /// <param name="boc">BOC from TON Connect after successful transaction execution.</param>
-        /// <remarks>User must be an owner of requested pot, otherwise error 404 will be returned.</remarks>
         [HttpPost("{key:minlength(3)}")]
         [Consumes(MediaTypeNames.Text.Plain)]
         [SwaggerResponse(404, "Pot with specified key does not exist or not active.")]
@@ -185,6 +185,36 @@
             lazyDbProvider.Value.MainDb.Update(pot);
 
             notificationService.TryRun<Services.Indexer.PotUpdateTask>();
+
+            return Ok();
+        }
+
+        /// <summary>
+        /// Sends rich-formatted message with Pot description to user in Telegram.
+        /// </summary>
+        /// <param name="initData">Value of <see href="https://core.telegram.org/bots/webapps#initializing-mini-apps">initData</see> Telegram property.</param>
+        /// <param name="key">Pot key.</param>
+        [HttpPost("{key:minlength(3)}")]
+        [SwaggerResponse(404, "Pot with specified key does not exist or not active.")]
+        public ActionResult GetPromoMessage(
+            [Required(AllowEmptyStrings = false), InitDataValidation, FromHeader(Name = BackendOptions.TelegramInitDataHeaderName)] string initData,
+            [Required(AllowEmptyStrings = false)] string key)
+        {
+            if (!ModelState.IsValid)
+            {
+                return new BadRequestObjectResult(new ValidationProblemDetails(ModelState));
+            }
+
+            if (!cachedData.ActivePots.TryGetValue(key, out var pot))
+            {
+                return NotFound();
+            }
+
+            var tgUser = InitDataValidationAttribute.GetUserDataWithoutValidation(initData);
+            lazyDbProvider.Value.GetOrCreateUser(tgUser);
+
+            lazyDbProvider.Value.MainDb.Insert(ScheduledMessage.Create(pot.Id, ScheduledMessageType.ReferralRichMessage, tgUser.Id));
+            notificationService.TryRun<ScheduledMessageSender>();
 
             return Ok();
         }

@@ -23,9 +23,6 @@
 
         public bool AllowsWriteToPM { get; set; }
 
-        [Indexed]
-        public long? Referrer { get; set; }
-
         [NotNull]
         public DateTimeOffset Created { get; set; }
 

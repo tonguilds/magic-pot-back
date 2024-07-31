@@ -40,7 +40,7 @@
             MainDb.CreateTable<PotTransaction>();
             MainDb.CreateTable<PrecachedMnemonic>();
             MainDb.CreateTable<UserJettonWallet>();
-            MainDb.CreateTable<PublishQueueItem>();
+            MainDb.CreateTable<ScheduledMessage>();
 
             UpdateDb(MainDb);
 

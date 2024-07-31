@@ -54,8 +54,8 @@
 
             services.AddSingleton<INotificationService, NotificationService>();
 
-            services.AddHttpClient<PublishingService>();
-            services.AddTask<PublishingService>(o => o.AutoStart(PublishingService.DefaultInterval));
+            services.AddHttpClient<ScheduledMessageSender>();
+            services.AddTask<ScheduledMessageSender>(o => o.AutoStart(ScheduledMessageSender.DefaultInterval));
 
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen(o =>
@@ -87,7 +87,7 @@
                     typeof(ITask<CachedData>),
                     typeof(ITask<IndexerControlTask>),
                     typeof(ITask<BackupTask>),
-                    typeof(ITask<PublishingService>),
+                    typeof(ITask<ScheduledMessageSender>),
                 ];
         }
 

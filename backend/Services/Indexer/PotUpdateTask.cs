@@ -46,7 +46,7 @@
                 if (changed)
                 {
                     notificationService.TryRun<Api.CachedData>();
-                    notificationService.TryRun<Api.PublishingService>();
+                    notificationService.TryRun<Api.ScheduledMessageSender>();
                 }
             }
         }
@@ -160,10 +160,6 @@
                 return false;
             }
 
-            var publishPotCharged = false;
-            var publishPotActivated = false;
-            var publishPotStolen = false;
-
             foreach (var tx in list)
             {
                 if (pot.Charged == null)
@@ -184,7 +180,6 @@
                         db.Update(tx);
 
                         pot.Charged = tx.Notified;
-                        publishPotCharged = true;
                     }
                 }
                 else if (pot.Stolen != null)
@@ -198,22 +193,31 @@
                     db.Update(tx);
 
                     pot.Stolen = pot.LastTx.Value.Add(pot.Countdown);
-                    publishPotStolen = true;
                 }
                 else if (tx.Amount < pot.TxSizeNext)
                 {
                     tx.State = PotTransactionState.TooSmallForBet;
                     db.Update(tx);
+
+                    if (tx.UserId != null)
+                    {
+                        db.Insert(ScheduledMessage.Create(pot.Id, ScheduledMessageType.PotTransactionDeclined, tx.UserId));
+                    }
                 }
                 else
                 {
                     tx.State = PotTransactionState.Bet;
                     db.Update(tx);
 
+                    if (tx.UserId != null)
+                    {
+                        db.Insert(ScheduledMessage.Create(pot.Id, ScheduledMessageType.PotTransactionAccepted, tx.UserId));
+                    }
+
                     if (pot.FirstTx is null)
                     {
                         pot.FirstTx = tx.Notified;
-                        publishPotActivated = true;
+                        db.Insert(ScheduledMessage.Create(pot.Id, ScheduledMessageType.PotStarted, pot.OwnerUserId));
                     }
 
                     if (pot.TxSizeIncrease > 0)
@@ -230,21 +234,6 @@
                 db.Update(pot);
             }
 
-            if (publishPotCharged)
-            {
-                db.Insert(PublishQueueItem.Create(pot.Id, PublishReason.PotCharged));
-            }
-
-            if (publishPotActivated)
-            {
-                db.Insert(PublishQueueItem.Create(pot.Id, PublishReason.PotActivated));
-            }
-
-            if (publishPotStolen)
-            {
-                db.Insert(PublishQueueItem.Create(pot.Id, PublishReason.PotStolen));
-            }
-
             return true;
         }
 
@@ -255,7 +244,6 @@
                 pot.Stolen = pot.LastTx.Value.Add(pot.Countdown);
                 pot.Touch();
                 dbProvider.MainDb.Update(pot);
-                dbProvider.MainDb.Insert(PublishQueueItem.Create(pot.Id, PublishReason.PotStolen));
                 return true;
             }
 
