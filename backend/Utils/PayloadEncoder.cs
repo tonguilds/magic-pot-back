@@ -1,6 +1,8 @@
 ﻿namespace MagicPot.Backend.Utils
 {
     using System.Buffers.Binary;
+    using MagicPot.Backend.Data;
+    using TonLibDotNet.Cells;
 
     public static class PayloadEncoder
     {
@@ -24,6 +26,15 @@
             }
 
             return res;
+        }
+
+        public static Cell EncodeToCell(long potId, long userId, string? referrerAddress)
+        {
+            return new CellBuilder()
+                .StoreBytes(PayloadEncoder.Encode(potId, userId))
+                .StoreBit(false) // not used, just to break byte alignment of address value
+                .StoreAddressIntStd2(referrerAddress)
+                .Build();
         }
 
         public static bool TryDecode(byte[] bytes, out long potId, out long userId)

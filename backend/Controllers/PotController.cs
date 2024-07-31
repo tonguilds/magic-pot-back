@@ -149,7 +149,7 @@
 
             var jetton = cachedData.AllJettons[pot.JettonMaster];
 
-            var (txAmount, txPayload) = PrepareTxInfo(pot, jetton, model.UserAddress, model.Amount ?? pot.TxSizeNext, tgUser.Id);
+            var (txAmount, txPayload) = PrepareTxInfo(pot, jetton, model.UserAddress, model.Amount ?? pot.TxSizeNext, tgUser.Id, model.Referrer);
 
             return new CreateTransactionResult() { TransactionInfo = new(ujw.JettonWallet!, txAmount, txPayload) };
         }
@@ -189,11 +189,11 @@
             return Ok();
         }
 
-        protected (long Amount, string Payload) PrepareTxInfo(Pot pot, Jetton jetton, string userAddress, decimal amount, long userId)
+        protected (long Amount, string Payload) PrepareTxInfo(Pot pot, Jetton jetton, string userAddress, decimal amount, long currentUserId, string? referrerAddress)
         {
             var tonAmount = TonLibDotNet.Utils.CoinUtils.Instance.ToNano(cachedData.Options.TonAmountForGas + cachedData.Options.TonAmountForInterest);
             var jettonAmount = (BigInteger)amount * (BigInteger)Math.Pow(10, jetton.Decimals);
-            var forwardPayload = new CellBuilder().StoreBytes(PayloadEncoder.Encode(pot.Id, userId)).Build();
+            var forwardPayload = PayloadEncoder.EncodeToCell(pot.Id, currentUserId, referrerAddress);
             var payload = TonLibDotNet.Recipes.Tep74Jettons.Instance.CreateTransferCell(
                 (ulong)pot.Id,
                 jettonAmount,

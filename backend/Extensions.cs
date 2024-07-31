@@ -20,5 +20,17 @@
                 .StoreDict(forwardPayload)
                 .Build();
         }
+
+        public static CellBuilder StoreAddressIntStd2(this CellBuilder builder, string? address)
+        {
+            if (string.IsNullOrWhiteSpace(address))
+            {
+                builder.StoreBit(false);
+                builder.StoreBit(false);
+                return builder;
+            }
+
+            return builder.StoreAddressIntStd(address);
+        }
     }
 }

@@ -21,9 +21,10 @@
         public string UserAddress { get; set; } = string.Empty;
 
         /// <summary>
-        /// Referrer ID (if any).
+        /// Referrer address (if any).
         /// </summary>
-        public long? Referrer { get; set; }
+        [TonAddress]
+        public string? Referrer { get; set; }
 
         /// <summary>
         /// Amount of tokens to send. Optional (pot required min.size will be used).
