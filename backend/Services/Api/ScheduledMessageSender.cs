@@ -123,36 +123,41 @@
             var creator = dbProvider.MainDb.Get<User>(pot.OwnerUserId);
             var jetton = dbProvider.MainDb.Get<Jetton>(x => x.Address == pot.JettonMaster);
 
+            var jettonLink = Program.InMainnet
+                ? "https://tonscan.org/address/" + jetton.Address
+                : "https://testnet.tonscan.org/address/" + jetton.Address;
+
             var text = $@"*{MarkdownEncoder.Escape(pot.Name)}*
 Pot creator: [@{MarkdownEncoder.Escape(creator.Username ?? creator.FirstName)}](tg://user?id={pot.OwnerUserId})
-Initial pool: {pot.InitialSize.ToString("N0", DefaultCulture)} [{MarkdownEncoder.Escape(jetton.Symbol)}](https://tonscan.org/address/{MarkdownEncoder.Escape(jetton.Address)})
-Countdown time: {pot.Countdown.TotalHours}h {pot.Countdown.TotalMinutes:00}m
+Initial pool: {MarkdownEncoder.Escape(pot.InitialSize.ToString("N0", DefaultCulture))} [{MarkdownEncoder.Escape(jetton.Symbol)}]({jettonLink})
+Countdown time: {Math.Floor(pot.Countdown.TotalHours)}h {pot.Countdown.Minutes:00}m
 Transaction cost type: {(pot.TxSizeIncrease == 0 ? "fixed" : "increasing " + pot.TxSizeIncrease + "%")}
-Who gets the prize:";
+Who gets the prize:
+";
 
             if (pot.CreatorPercent > 0)
             {
-                text += $"\\*creator {pot.CreatorPercent}%" + Environment.NewLine;
+                text += $"creator {pot.CreatorPercent}%" + Environment.NewLine;
             }
 
             if (pot.LastTxPercent > 0)
             {
-                text += $"\\*{pot.LastTxCount} last players {pot.LastTxPercent}%" + Environment.NewLine;
+                text += $"{pot.LastTxCount} last players {pot.LastTxPercent}%" + Environment.NewLine;
             }
 
             if (pot.ReferrersPercent > 0)
             {
-                text += $"\\*referrers {pot.ReferrersPercent}%" + Environment.NewLine;
+                text += $"referrers {pot.ReferrersPercent}%" + Environment.NewLine;
             }
 
             if (pot.RandomTxPercent > 0)
             {
-                text += $"\\*{pot.RandomTxCount} random players {pot.RandomTxPercent}%" + Environment.NewLine;
+                text += $"{pot.RandomTxCount} random players {pot.RandomTxPercent}%" + Environment.NewLine;
             }
 
             if (pot.BurnPercent > 0)
             {
-                text += $"\\*burn {pot.BurnPercent}%" + Environment.NewLine;
+                text += $"burn {pot.BurnPercent}%" + Environment.NewLine;
             }
 
             var replyMarkup = CreateReplyMarkup(pot, pot.OwnerUserAddress, "Open pot");
