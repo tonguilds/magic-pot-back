@@ -129,7 +129,7 @@
                     continue;
                 }
 
-                if (encodedPotId != pot.Id)
+                if (encodedPotId != null && encodedPotId != pot.Id)
                 {
                     ptx.State = PotTransactionState.ManualTransfer;
                     db.Insert(ptx);
