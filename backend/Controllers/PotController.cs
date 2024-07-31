@@ -154,6 +154,41 @@
             return new CreateTransactionResult() { TransactionInfo = new(ujw.JettonWallet!, txAmount, txPayload) };
         }
 
+        /// <summary>
+        /// [Re]activates watching for new transactions to Pot address (after successful sending tx from TON Connect).
+        /// </summary>
+        /// <param name="initData">Value of <see href="https://core.telegram.org/bots/webapps#initializing-mini-apps">initData</see> Telegram property.</param>
+        /// <param name="key">Pot key.</param>
+        /// <param name="boc">BOC from TON Connect after successful transaction execution.</param>
+        /// <remarks>User must be an owner of requested pot, otherwise error 404 will be returned.</remarks>
+        [HttpPost("{key:minlength(3)}")]
+        [Consumes(MediaTypeNames.Text.Plain)]
+        [SwaggerResponse(404, "Pot with specified key does not exist or not active.")]
+        public ActionResult WaitForTransaction(
+            [Required(AllowEmptyStrings = false), InitDataValidation, FromHeader(Name = BackendOptions.TelegramInitDataHeaderName)] string initData,
+            [Required(AllowEmptyStrings = false)] string key,
+            [Required(AllowEmptyStrings = false), FromBody] string boc)
+        {
+            if (!ModelState.IsValid)
+            {
+                return new BadRequestObjectResult(new ValidationProblemDetails(ModelState));
+            }
+
+            if (!cachedData.ActivePots.TryGetValue(key, out var pot))
+            {
+                return NotFound();
+            }
+
+            // re-read pot from DB
+            pot = lazyDbProvider.Value.MainDb.Get<Pot>(pot.Id);
+            pot.Touch();
+            lazyDbProvider.Value.MainDb.Update(pot);
+
+            notificationService.TryRun<Services.Indexer.PotUpdateTask>();
+
+            return Ok();
+        }
+
         protected (long Amount, string Payload) PrepareTxInfo(Pot pot, Jetton jetton, string userAddress, decimal amount, long userId)
         {
             var tonAmount = TonLibDotNet.Utils.CoinUtils.Instance.ToNano(cachedData.Options.TonAmountForGas + cachedData.Options.TonAmountForInterest);
