@@ -46,6 +46,7 @@
             }
 
             var tgUser = InitDataValidationAttribute.GetUserDataWithoutValidation(initData);
+            lazyDbProvider.Value.GetOrCreateUser(tgUser);
 
             var db = lazyDbProvider.Value.MainDb;
 
@@ -59,7 +60,7 @@
             var creator = db.Get<User>(pot.OwnerUserId);
             cachedData.ActivePotTransactions.TryGetValue(pot.Id, out var txlist);
 
-            return PotInfo.Create(pot, jetton, creator, txlist ?? [], cachedData.ActivePotUsers);
+            return PotInfo.Create(pot, jetton, creator, txlist, cachedData.ActivePotUsers);
         }
 
         /// <summary>
@@ -90,8 +91,9 @@
 
             var jetton = cachedData.AllJettons[pot.JettonMaster];
             var creator = cachedData.ActivePotOwners[pot.OwnerUserId];
+            cachedData.ActivePotTransactions.TryGetValue(pot.Id, out var txlist);
 
-            return PotInfo.Create(pot, jetton, creator, cachedData.ActivePotTransactions[pot.Id], cachedData.ActivePotUsers);
+            return PotInfo.Create(pot, jetton, creator, txlist, cachedData.ActivePotUsers);
         }
 
         /// <summary>
@@ -180,6 +182,9 @@
                 return NotFound();
             }
 
+            var tgUser = InitDataValidationAttribute.GetUserDataWithoutValidation(initData);
+            lazyDbProvider.Value.GetOrCreateUser(tgUser);
+
             // re-read pot from DB
             pot = lazyDbProvider.Value.MainDb.Get<Pot>(pot.Id);
             pot.Touch();
@@ -197,7 +202,8 @@
         /// <param name="key">Pot key.</param>
         [HttpPost("{key:minlength(3)}")]
         [SwaggerResponse(404, "Pot with specified key does not exist or not active.")]
-        public ActionResult GetPromoMessage(
+        [SwaggerResponse(409, "User not allowed bot to write to PM.")]
+        public ActionResult SendPromoMessage(
             [Required(AllowEmptyStrings = false), InitDataValidation, FromHeader(Name = BackendOptions.TelegramInitDataHeaderName)] string initData,
             [Required(AllowEmptyStrings = false)] string key)
         {
@@ -214,10 +220,85 @@
             var tgUser = InitDataValidationAttribute.GetUserDataWithoutValidation(initData);
             lazyDbProvider.Value.GetOrCreateUser(tgUser);
 
+            if (!tgUser.AllowsWriteToPM)
+            {
+                return Conflict("User not allowed bot to write to PM.");
+            }
+
+            lazyDbProvider.Value.GetOrCreateUser(tgUser);
+
             lazyDbProvider.Value.MainDb.Insert(ScheduledMessage.Create(pot.Id, ScheduledMessageType.ReferralRichMessage, tgUser.Id));
             notificationService.TryRun<ScheduledMessageSender>();
 
             return Ok();
+        }
+
+        /// <summary>
+        /// Returns list of all Pots, owned (created) by specified user, in any state, ordered by time of creation (in descending order, young pots first).
+        /// </summary>
+        /// <param name="initData">Value of <see href="https://core.telegram.org/bots/webapps#initializing-mini-apps">initData</see> Telegram property.</param>
+        /// <returns>List of <see cref="PotInfo"/> data.</returns>
+        /// <remarks>See <see cref="GetPot"/> for status flags description.</remarks>
+        [HttpGet]
+        public ActionResult<List<PotInfo>> GetCreatedPots([Required(AllowEmptyStrings = false), InitDataValidation, FromHeader(Name = BackendOptions.TelegramInitDataHeaderName)] string initData)
+        {
+            if (!ModelState.IsValid)
+            {
+                return new BadRequestObjectResult(new ValidationProblemDetails(ModelState));
+            }
+
+            var tgUser = InitDataValidationAttribute.GetUserDataWithoutValidation(initData);
+            lazyDbProvider.Value.GetOrCreateUser(tgUser);
+
+            var db = lazyDbProvider.Value.MainDb;
+
+            var pots = db.Table<Pot>().Where(x => x.OwnerUserId == tgUser.Id).OrderByDescending(x => x.Created).ToList();
+
+            var creator = db.Get<User>(tgUser.Id);
+
+            return pots.Select(x =>
+                {
+                    var jetton = cachedData.AllJettons[x.JettonMaster];
+                    cachedData.ActivePotTransactions.TryGetValue(x.Id, out var list);
+                    return PotInfo.Create(x, jetton, creator, list, cachedData.ActivePotUsers);
+                })
+                .ToList();
+        }
+
+        /// <summary>
+        /// Returns list of active Pots, which current user participated in, ordered by end time (in descending order, nearest ending first).
+        /// </summary>
+        /// <param name="initData">Value of <see href="https://core.telegram.org/bots/webapps#initializing-mini-apps">initData</see> Telegram property.</param>
+        /// <returns>List of <see cref="PotInfo"/> data.</returns>
+        /// <remarks>See <see cref="GetPot"/> for status flags description.</remarks>
+        [HttpGet]
+        public ActionResult<List<PotInfo>> GetParticipatingPots([Required(AllowEmptyStrings = false), InitDataValidation, FromHeader(Name = BackendOptions.TelegramInitDataHeaderName)] string initData)
+        {
+            if (!ModelState.IsValid)
+            {
+                return new BadRequestObjectResult(new ValidationProblemDetails(ModelState));
+            }
+
+            var tgUser = InitDataValidationAttribute.GetUserDataWithoutValidation(initData);
+            lazyDbProvider.Value.GetOrCreateUser(tgUser);
+
+            var db = lazyDbProvider.Value.MainDb;
+
+            var potIds = db.Table<PotTransaction>().Where(x => x.UserId == tgUser.Id).Select(x => x.PotId).Distinct().ToHashSet();
+
+            var now = DateTimeOffset.UtcNow;
+            return cachedData.ActivePots.Values
+                .Where(x => potIds.Contains(x.Id))
+                .Select(x =>
+                {
+                    var jetton = cachedData.AllJettons[x.JettonMaster];
+                    var creator = cachedData.ActivePotOwners[x.OwnerUserId];
+                    cachedData.ActivePotTransactions.TryGetValue(x.Id, out var list);
+                    return PotInfo.Create(x, jetton, creator, list, cachedData.ActivePotUsers);
+                })
+                .OrderBy(x => x.IsEnded)
+                .ThenBy(x => Math.Abs(now.Subtract(x.EndsAt ?? now).Ticks))
+                .ToList();
         }
 
         protected (long Amount, string Payload) PrepareTxInfo(Pot pot, Jetton jetton, string userAddress, decimal amount, long currentUserId, string? referrerAddress)

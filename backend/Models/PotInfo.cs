@@ -38,9 +38,12 @@
 
         public PotRules Rules { get; set; } = new();
 
-        public List<PotParticipant> LastParticipants { get; set; } = [];
+        /// <summary>
+        /// List of last trtansactions. Filled only for active pots.
+        /// </summary>
+        public List<PotParticipant>? LastParticipants { get; set; }
 
-        public static PotInfo Create(Pot pot, Jetton jetton, User user, IList<PotTransaction> transactions, IList<User> knownUsers)
+        public static PotInfo Create(Pot pot, Jetton jetton, User user, IList<PotTransaction>? transactions, IList<User> knownUsers)
         {
             return new PotInfo
             {
@@ -72,7 +75,7 @@
                     ReferrersPercent = pot.ReferrersPercent,
                     BurnPercent = pot.BurnPercent,
                 },
-                LastParticipants = transactions
+                LastParticipants = transactions?
                     .Select(x => new PotParticipant
                     {
                         TxTime = x.Notified,
