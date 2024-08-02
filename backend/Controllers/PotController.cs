@@ -202,6 +202,7 @@
         /// <param name="key">Pot key.</param>
         /// <param name="userAddress">Referrer (current user) address.</param>
         [HttpPost("{key:minlength(3)}")]
+        [Consumes(MediaTypeNames.Application.Json, MediaTypeNames.Text.Plain, MediaTypeNames.Application.FormUrlEncoded)]
         [SwaggerResponse(404, "Pot with specified key does not exist or not active.")]
         [SwaggerResponse(409, "User not allowed bot to write to PM.")]
         public ActionResult SendPromoMessage(
