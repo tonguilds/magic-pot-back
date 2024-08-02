@@ -145,6 +145,11 @@
                     continue;
                 }
 
+                if (encodedReferrerAddress == userWalletAddres || encodedReferrerAddress == pot.Address)
+                {
+                    encodedReferrerAddress = pot.OwnerUserAddress;
+                }
+
                 ptx.State = PotTransactionState.Processing;
                 ptx.Sender = userWalletAddres;
                 ptx.Amount = (decimal)amount / (decimal)Math.Pow(10, jetton.Decimals);
