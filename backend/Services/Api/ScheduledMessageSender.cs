@@ -64,19 +64,30 @@
                 return;
             }
 
-            var user = msg.UserId == null ? null : dbProvider.MainDb.Get<User>(msg.UserId.Value);
-            if (user != null && !user.AllowsWriteToPM)
+            if (msg.UserId != null)
             {
-                logger.LogWarning("User {Id} does not allow PM, notification of {Type} for {Pot} skipped", user.Id, msg.Type, pot.Key);
+                var user = dbProvider.MainDb.Find<User>(msg.UserId.Value);
+                if (user != null && !user.AllowsWriteToPM)
+                {
+                    logger.LogWarning("User {Id} does not allow PM, notification of {Type} for {Pot} skipped", user.Id, msg.Type, pot.Key);
+                    return;
+                }
+            }
+            else if (options.TelegramPublishingChatId == null || options.TelegramPublishingChatId == 0)
+            {
                 return;
+            }
+            else
+            {
+                msg.UserId = options.TelegramPublishingChatId;
             }
 
             var (data, path) = msg.Type switch
             {
-                ScheduledMessageType.ReferralRichMessage => CreatePotRichMessage(pot, user!.Id),
+                ScheduledMessageType.ReferralRichMessage => CreatePotRichMessage(pot, msg.UserId.Value, msg.Address),
                 ScheduledMessageType.PotStarted => CreatePotStartedMessage(pot, pot.OwnerUserId),
-                ScheduledMessageType.PotTransactionAccepted => CreatePotTransactionAcceptedMessage(pot, user!.Id),
-                ScheduledMessageType.PotTransactionDeclined => CreatePotTransactionDeclinedMessage(pot, user!.Id),
+                ScheduledMessageType.PotTransactionAccepted => CreatePotTransactionAcceptedMessage(pot, msg.UserId.Value),
+                ScheduledMessageType.PotTransactionDeclined => CreatePotTransactionDeclinedMessage(pot, msg.UserId.Value),
                 _ => (new object(), string.Empty),
             };
 
@@ -118,7 +129,7 @@
             };
         }
 
-        protected (object Data, string Path) CreatePotRichMessage(Pot pot, long targetUser)
+        protected (object Data, string Path) CreatePotRichMessage(Pot pot, long targetUser, string? refAddress)
         {
             var creator = dbProvider.MainDb.Get<User>(pot.OwnerUserId);
             var jetton = dbProvider.MainDb.Get<Jetton>(x => x.Address == pot.JettonMaster);
@@ -160,7 +171,12 @@ Who gets the prize:
                 text += $"burn {pot.BurnPercent}%" + Environment.NewLine;
             }
 
-            var replyMarkup = CreateReplyMarkup(pot, pot.OwnerUserAddress, "Open pot");
+            if (string.IsNullOrEmpty(refAddress))
+            {
+                refAddress = pot.OwnerUserAddress;
+            }
+
+            var replyMarkup = CreateReplyMarkup(pot, refAddress, "Open pot");
 
             if (string.IsNullOrWhiteSpace(pot.CoverImage))
             {

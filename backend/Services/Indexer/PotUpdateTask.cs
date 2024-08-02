@@ -190,6 +190,7 @@
                         db.Update(tx);
 
                         pot.Charged = tx.Notified;
+                        db.Insert(ScheduledMessage.Create(pot.Id, ScheduledMessageType.ReferralRichMessage, null));
                     }
                 }
                 else if (pot.Stolen != null)

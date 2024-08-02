@@ -20,9 +20,7 @@
 
         public TimeSpan JettonBalanceValidity { get; set; } = TimeSpan.FromMinutes(15);
 
-        public string TelegramPublishingChatId { get; set; } = string.Empty;
-
-        public long? TelegramPublishingThreadId { get; set; }
+        public long? TelegramPublishingChatId { get; set; }
 
         public decimal TonAmountForGas { get; set; } = 0.05M;
 
