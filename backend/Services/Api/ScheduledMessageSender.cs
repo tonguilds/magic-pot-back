@@ -108,7 +108,7 @@
                 resp.EnsureSuccessStatusCode();
             }
 
-            logger.LogInformation("Published info about {Event} of pot {Key}", msg.Type, pot.Key);
+            logger.LogInformation("Published info about {Event} of pot {Key} to {Id}", msg.Type, pot.Key, msg.UserId);
         }
 
         protected static object CreateReplyMarkup(Pot pot, string? refAddress = null, string text = "Steal the pot")

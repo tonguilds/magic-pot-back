@@ -114,7 +114,7 @@
                     || !blockchainReader.TryParseJettonTransferNotification(tx.InMsg, out var jettonWalletAddress, out var queryId, out var userWalletAddres, out var amount, out var forwardPayload))
                 {
                     db.Insert(ptx);
-                    logger.LogDebug("Pot {Key} tx {Hash} at {Time} is not a jetton transfer, ignored", pot.Key, ptx.Hash, ptx.Notified);
+                    logger.LogWarning("Pot {Key} tx {Hash} at {Time} is not a jetton transfer, ignored", pot.Key, ptx.Hash, ptx.Notified);
                     continue;
                 }
 
@@ -125,7 +125,7 @@
                 {
                     ptx.State = PotTransactionState.FakeTransfer;
                     db.Insert(ptx);
-                    logger.LogDebug("Pot {Key} tx {Hash} at {Time} is a FAKE jetton transfer (from unknown {Address}), ignored", pot.Key, ptx.Hash, ptx.Notified, jettonWalletAddress);
+                    logger.LogWarning("Pot {Key} tx {Hash} at {Time} is a FAKE jetton transfer (from unknown {Address}), ignored", pot.Key, ptx.Hash, ptx.Notified, jettonWalletAddress);
                     continue;
                 }
 
@@ -133,7 +133,7 @@
                 {
                     ptx.State = PotTransactionState.ManualTransferNoPayload;
                     db.Insert(ptx);
-                    logger.LogDebug("Pot {Key} tx {Hash} at {Time} is a MANUAL jetton transfer (without payload), ignored", pot.Key, ptx.Hash, ptx.Notified);
+                    logger.LogWarning("Pot {Key} tx {Hash} at {Time} is a MANUAL jetton transfer (without payload), ignored", pot.Key, ptx.Hash, ptx.Notified);
                     continue;
                 }
 
@@ -141,7 +141,7 @@
                 {
                     ptx.State = PotTransactionState.ManualTransferInvalidPayload;
                     db.Insert(ptx);
-                    logger.LogDebug("Pot {Key} tx {Hash} at {Time} is a MANUAL jetton transfer (invalid payload), ignored", pot.Key, ptx.Hash, ptx.Notified);
+                    logger.LogWarning("Pot {Key} tx {Hash} at {Time} is a MANUAL jetton transfer (invalid payload), ignored", pot.Key, ptx.Hash, ptx.Notified);
                     continue;
                 }
 
@@ -156,7 +156,7 @@
                 ptx.UserId = encodedUserId;
                 ptx.Referrer = encodedReferrerAddress;
                 db.Insert(ptx);
-                logger.LogInformation("Pot {Key} tx {Hash} at {Time} found new jetton transfer (user {Address})", pot.Key, ptx.Hash, ptx.Notified, ptx.Sender);
+                logger.LogInformation("Pot {Key} tx {Hash} at {Time} found new jetton transfer of {Amount} from user {Id} / {Address}, ref {RAddress}", pot.Key, ptx.Hash, ptx.Notified, ptx.Amount, ptx.UserId, ptx.Sender, ptx.Referrer);
                 found = true;
             }
 
