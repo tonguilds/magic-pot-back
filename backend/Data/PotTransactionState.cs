@@ -13,9 +13,14 @@
         FakeTransfer = 1,
 
         /// <summary>
-        /// Transaction is a manual jetton tranfer (forward_payload mismatch).
+        /// Transaction is a manual jetton tranfer (forward_payload is null or empty).
         /// </summary>
-        ManualTransfer = 2,
+        ManualTransferNoPayload = 2,
+
+        /// <summary>
+        /// Transaction is a manual jetton tranfer (forward_payload is invalid/wrong).
+        /// </summary>
+        ManualTransferInvalidPayload = 3,
 
         /// <summary>
         /// Transaction is fine, and waiting for additional classification.

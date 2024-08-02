@@ -1,7 +1,7 @@
 ﻿namespace MagicPot.Backend.Utils
 {
     using System.Buffers.Binary;
-    using MagicPot.Backend.Data;
+    using TonLibDotNet;
     using TonLibDotNet.Cells;
 
     public static class PayloadEncoder
@@ -28,15 +28,6 @@
             return res;
         }
 
-        public static Cell EncodeToCell(long potId, long userId, string? referrerAddress)
-        {
-            return new CellBuilder()
-                .StoreBytes(PayloadEncoder.Encode(potId, userId))
-                .StoreBit(false) // not used, just to break byte alignment of address value
-                .StoreAddressIntStd2(referrerAddress)
-                .Build();
-        }
-
         public static bool TryDecode(byte[] bytes, out long potId, out long userId)
         {
             potId = 0;
@@ -59,6 +50,47 @@
 
             var userBytes = new[] { bytes[2], bytes[5], bytes[8], bytes[11], bytes[14], bytes[17], bytes[20], bytes[23] };
             userId = BinaryPrimitives.ReadInt64BigEndian(userBytes);
+
+            return true;
+        }
+
+        public static Cell EncodeToCell(long potId, long userId, string? referrerAddress)
+        {
+            return new CellBuilder()
+                .StoreBytes(PayloadEncoder.Encode(potId, userId))
+                .StoreBit(false) // not used, just to break byte alignment of address value
+                .StoreAddressIntStd2(referrerAddress)
+                .Build();
+        }
+
+        public static bool TryDecodeCell(Cell cell, out long potId, out long userId, out string? referrerAddress)
+        {
+            potId = 0;
+            userId = 0;
+            referrerAddress = null;
+
+            var slice = cell.BeginRead();
+
+            if (!slice.TryCanLoad(24 * 8))
+            {
+                return false;
+            }
+
+            var encodedPayload = slice.LoadBytes(24);
+            if (!TryDecode(encodedPayload, out potId, out userId))
+            {
+                return false;
+            }
+
+            try
+            {
+                slice.SkipBits(1);
+                referrerAddress = slice.TryLoadAddressIntStd(false, !Program.InMainnet);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
 
             return true;
         }

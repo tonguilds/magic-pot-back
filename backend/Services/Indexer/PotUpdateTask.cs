@@ -111,7 +111,7 @@
                 };
 
                 if (tx.InMsg == null
-                    || !blockchainReader.TryParseJettonTransferNotification(tx.InMsg, out var jettonWalletAddress, out var queryId, out var userWalletAddres, out var amount, out var encodedPotId, out var encodedUserId, out var encodedReferrerAddress))
+                    || !blockchainReader.TryParseJettonTransferNotification(tx.InMsg, out var jettonWalletAddress, out var queryId, out var userWalletAddres, out var amount, out var forwardPayload))
                 {
                     db.Insert(ptx);
                     logger.LogDebug("Pot {Key} tx {Hash} at {Time} is not a jetton transfer, ignored", pot.Key, ptx.Hash, ptx.Notified);
@@ -129,11 +129,19 @@
                     continue;
                 }
 
-                if (encodedPotId != null && encodedPotId != pot.Id)
+                if (forwardPayload == null || !PayloadEncoder.TryDecodeCell(forwardPayload, out var encodedPotId, out var encodedUserId, out var encodedReferrerAddress))
                 {
-                    ptx.State = PotTransactionState.ManualTransfer;
+                    ptx.State = PotTransactionState.ManualTransferNoPayload;
                     db.Insert(ptx);
-                    logger.LogDebug("Pot {Key} tx {Hash} at {Time} is a MANUAL jetton transfer, ignored", pot.Key, ptx.Hash, ptx.Notified);
+                    logger.LogDebug("Pot {Key} tx {Hash} at {Time} is a MANUAL jetton transfer (without payload), ignored", pot.Key, ptx.Hash, ptx.Notified);
+                    continue;
+                }
+
+                if (encodedPotId != pot.Id)
+                {
+                    ptx.State = PotTransactionState.ManualTransferInvalidPayload;
+                    db.Insert(ptx);
+                    logger.LogDebug("Pot {Key} tx {Hash} at {Time} is a MANUAL jetton transfer (invalid payload), ignored", pot.Key, ptx.Hash, ptx.Notified);
                     continue;
                 }
 

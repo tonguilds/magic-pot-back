@@ -93,17 +93,13 @@
             [NotNullWhen(true)] out long? queryId,
             [NotNullWhen(true)] out string? userWalletAddress,
             [NotNullWhen(true)] out BigInteger? amount,
-            out long? encodedPotId,
-            out long? encodedUserId,
-            out string? encodedReferrerAddress)
+            out Cell? forwardPayload)
         {
             amount = default;
             userWalletAddress = default;
             queryId = default;
             jettonWalletAddress = msg.Source.Value;
-            encodedPotId = default;
-            encodedUserId = default;
-            encodedReferrerAddress = null;
+            forwardPayload = default;
 
             if (msg.MsgData is not DataRaw data || string.IsNullOrWhiteSpace(data.Body))
             {
@@ -127,34 +123,10 @@
             amount = slice.LoadCoinsToBigInt();
             userWalletAddress = slice.LoadAddressIntStd();
 
-            if (!slice.TryCanLoadRef())
+            if (slice.TryCanLoadRef())
             {
-                return true;
+                forwardPayload = slice.LoadRef();
             }
-
-            var payloadSlice = slice.LoadRef().BeginRead();
-            if (!payloadSlice.TryCanLoad(24 * 8))
-            {
-                return true;
-            }
-
-            var encodedPayload = payloadSlice.LoadBytes(24);
-            if (!PayloadEncoder.TryDecode(encodedPayload, out var potId, out var userId))
-            {
-                return true;
-            }
-
-            encodedPotId = potId;
-            encodedUserId = userId;
-
-            if (!payloadSlice.TryCanLoad(3))
-            {
-                return true;
-            }
-
-            payloadSlice.SkipBits(1);
-
-            encodedReferrerAddress = payloadSlice.TryLoadAddressIntStd(false, !Program.InMainnet);
 
             return true;
         }
