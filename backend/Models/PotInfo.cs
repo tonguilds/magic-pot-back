@@ -12,6 +12,8 @@
 
         public long CreatorId { get; set; }
 
+        public string CreatorAddress { get; set; } = string.Empty;
+
         public string? CreatorName { get; set; } = string.Empty;
 
         public string? CreatorUsername { get; set; } = string.Empty;
@@ -53,6 +55,7 @@
                 CreatorId = user.Id,
                 CreatorName = user.FirstName,
                 CreatorUsername = user.Username,
+                CreatorAddress = pot.OwnerUserAddress,
                 CoverImage = pot.CoverImage,
                 InitialSize = pot.InitialSize,
                 TotalSize = pot.TotalSize,
