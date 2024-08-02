@@ -16,13 +16,16 @@
 
         public long? UserId { get; set; }
 
-        public static ScheduledMessage Create(long potId, ScheduledMessageType type, long? userId)
+        public string? Address { get; set; }
+
+        public static ScheduledMessage Create(long potId, ScheduledMessageType type, long? userId, string? address = null)
         {
             return new()
             {
                 PotId = potId,
                 Type = type,
                 UserId = userId,
+                Address = address,
             };
         }
     }

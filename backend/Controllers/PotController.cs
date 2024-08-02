@@ -200,12 +200,14 @@
         /// </summary>
         /// <param name="initData">Value of <see href="https://core.telegram.org/bots/webapps#initializing-mini-apps">initData</see> Telegram property.</param>
         /// <param name="key">Pot key.</param>
+        /// <param name="userAddress">Referrer (current user) address.</param>
         [HttpPost("{key:minlength(3)}")]
         [SwaggerResponse(404, "Pot with specified key does not exist or not active.")]
         [SwaggerResponse(409, "User not allowed bot to write to PM.")]
         public ActionResult SendPromoMessage(
             [Required(AllowEmptyStrings = false), InitDataValidation, FromHeader(Name = BackendOptions.TelegramInitDataHeaderName)] string initData,
-            [Required(AllowEmptyStrings = false)] string key)
+            [Required(AllowEmptyStrings = false)] string key,
+            [TonAddress] string? userAddress)
         {
             if (!ModelState.IsValid)
             {
@@ -227,7 +229,7 @@
 
             lazyDbProvider.Value.GetOrCreateUser(tgUser);
 
-            lazyDbProvider.Value.MainDb.Insert(ScheduledMessage.Create(pot.Id, ScheduledMessageType.ReferralRichMessage, tgUser.Id));
+            lazyDbProvider.Value.MainDb.Insert(ScheduledMessage.Create(pot.Id, ScheduledMessageType.ReferralRichMessage, tgUser.Id, userAddress));
             notificationService.TryRun<ScheduledMessageSender>();
 
             return Ok();
