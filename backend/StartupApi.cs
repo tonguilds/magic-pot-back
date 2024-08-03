@@ -8,6 +8,7 @@
     using MagicPot.Backend.Utils;
     using Microsoft.OpenApi.Models;
     using Polly;
+    using Polly.Extensions.Http;
     using RecurrentTasks;
 
     public class StartupApi(IConfiguration configuration)
@@ -40,13 +41,17 @@
             // Required for correct DB initialization (e.g. UseMainnet flag)
             services.Configure<TonLibDotNet.TonOptions>(configuration.GetSection("TonOptions"));
 
-            services.AddHttpClient<ITonApiService, TonApiService>()
-                .AddTransientHttpErrorPolicy(p => p.WaitAndRetryAsync(3, _ => TimeSpan.FromSeconds(1)));
+            services.AddHttpClient<ITonApiService, TonApiService>(c => c.Timeout = TimeSpan.FromSeconds(60))
+                .AddPolicyHandler(Policy.WrapAsync(
+                    HttpPolicyExtensions.HandleTransientHttpError().Or<Polly.Timeout.TimeoutRejectedException>().WaitAndRetryAsync(3, x => TimeSpan.FromSeconds(1)),
+                    Policy.TimeoutAsync<HttpResponseMessage>(10)));
             services.AddScoped(sp => new Lazy<ITonApiService>(() => sp.GetRequiredService<ITonApiService>()));
 
             services.Configure<PinataOptions>(configuration.GetSection("PinataOptions"));
-            services.AddHttpClient<IFileService, PinataService>()
-                .AddTransientHttpErrorPolicy(p => p.WaitAndRetryAsync(3, _ => TimeSpan.FromSeconds(1)));
+            services.AddHttpClient<IFileService, PinataService>(c => c.Timeout = TimeSpan.FromSeconds(120))
+                .AddPolicyHandler(Policy.WrapAsync(
+                    HttpPolicyExtensions.HandleTransientHttpError().Or<Polly.Timeout.TimeoutRejectedException>().WaitAndRetryAsync(3, x => TimeSpan.FromSeconds(x)),
+                    Policy.TimeoutAsync<HttpResponseMessage>(10)));
             services.AddScoped(sp => new Lazy<IFileService>(() => sp.GetRequiredService<IFileService>()));
 
             services.Configure<BackupOptions>(configuration.GetSection("BackupOptions"));
@@ -54,7 +59,10 @@
 
             services.AddSingleton<INotificationService, NotificationService>();
 
-            services.AddHttpClient<ScheduledMessageSender>();
+            services.AddHttpClient<ScheduledMessageSender>(c => c.Timeout = TimeSpan.FromSeconds(60))
+                .AddPolicyHandler(Policy.WrapAsync(
+                    HttpPolicyExtensions.HandleTransientHttpError().Or<Polly.Timeout.TimeoutRejectedException>().WaitAndRetryAsync(3, x => TimeSpan.FromSeconds(x)),
+                    Policy.TimeoutAsync<HttpResponseMessage>(5)));
             services.AddTask<ScheduledMessageSender>(o => o.AutoStart(ScheduledMessageSender.DefaultInterval));
 
             services.AddEndpointsApiExplorer();
