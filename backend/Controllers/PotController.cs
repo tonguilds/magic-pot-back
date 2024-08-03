@@ -287,7 +287,7 @@
 
             var db = lazyDbProvider.Value.MainDb;
 
-            var potIds = db.Table<PotTransaction>().Where(x => x.UserId == tgUser.Id).Select(x => x.PotId).Distinct().ToHashSet();
+            var potIds = db.Table<Transaction>().Where(x => x.UserId == tgUser.Id).Select(x => x.PotId).Distinct().ToHashSet();
 
             var now = DateTimeOffset.UtcNow;
             return cachedData.ActivePots.Values
@@ -308,7 +308,7 @@
         {
             var tonAmount = TonLibDotNet.Utils.CoinUtils.Instance.ToNano(cachedData.Options.TonAmountForGas + cachedData.Options.TonAmountForInterest);
             var jettonAmount = (BigInteger)amount * (BigInteger)Math.Pow(10, jetton.Decimals);
-            var forwardPayload = PayloadEncoder.EncodeToCell(pot.Id, currentUserId, referrerAddress);
+            var forwardPayload = PayloadEncoder.EncodeBet(currentUserId, referrerAddress);
             var payload = TonLibDotNet.Recipes.Tep74Jettons.Instance.CreateTransferCell(
                 (ulong)pot.Id,
                 jettonAmount,

@@ -1,7 +1,9 @@
 ﻿namespace MagicPot.Backend.Services.Indexer
 {
+    using System.Runtime.CompilerServices;
     using MagicPot.Backend.Data;
     using MagicPot.Backend.Utils;
+    using Microsoft.AspNetCore.Http.HttpResults;
     using RecurrentTasks;
     using TonLibDotNet.Types.Internal;
 
@@ -96,67 +98,91 @@
 
             await foreach (var tx in blockchainReader.EnumerateTransactions(pot.Address, lastTransaction, pot.SyncLt))
             {
-                var existing = db.Find<PotTransaction>(x => x.PotId == pot.Id && x.Hash == tx.TransactionId.Hash);
+                var existing = db.Find<Transaction>(x => x.PotId == pot.Id && x.Hash == tx.TransactionId.Hash);
                 if (existing != null)
                 {
                     continue;
                 }
 
-                var ptx = new PotTransaction
+                var ptx = new Transaction
                 {
                     PotId = pot.Id,
-                    State = PotTransactionState.Unknown,
                     Hash = tx.TransactionId.Hash,
-                    Notified = tx.Utime,
+                    Time = tx.Utime,
+                    Sender = string.Empty,
+                    Amount = 0,
+                    IsJettonTransfer = false,
+                    OpCode = TransactionOpcode.DefaultNone,
+                    State = TransactionState.Unprocessed,
+                    UserId = null,
+                    Referrer = null,
                 };
 
-                if (tx.InMsg == null
-                    || !blockchainReader.TryParseJettonTransferNotification(tx.InMsg, out var jettonWalletAddress, out var queryId, out var userWalletAddres, out var amount, out var forwardPayload))
+                if (tx.InMsg == null)
                 {
+                    ptx.State = TransactionState.InvalidNoInMsg;
                     db.Insert(ptx);
-                    logger.LogWarning("Pot {Key} tx {Hash} at {Time} is not a jetton transfer, ignored", pot.Key, ptx.Hash, ptx.Notified);
+                    logger.LogWarning("Ignored tx {Hash} at {Time} for pot {Key}: {State}", ptx.Hash, ptx.Time, pot.Key, ptx.State);
+                    continue;
+                }
+
+                ptx.Amount = TonLibDotNet.Utils.CoinUtils.Instance.FromNano(tx.InMsg.Value);
+
+                if (string.IsNullOrWhiteSpace(tx.InMsg.Source.Value))
+                {
+                    ptx.State = TransactionState.InvalidNoSender;
+                    db.Insert(ptx);
+                    logger.LogWarning("Ignored tx {Hash} at {Time} for pot {Key}: {State}", ptx.Hash, ptx.Time, pot.Key, ptx.State);
+                    continue;
+                }
+
+                ptx.Sender = AddressConverter.ToUser(tx.InMsg.Source.Value);
+
+                if (!blockchainReader.TryParseJettonTransferNotification(tx.InMsg, out var jettonWalletAddress, out var queryId, out var userWalletAddres, out var amount, out var forwardPayload))
+                {
+                    // Keep state Unprocessed, will process later.
+                    ptx.State = TransactionState.Unprocessed;
+                    db.Insert(ptx);
+                    logger.LogInformation("Found non-jetton tx {Hash} at {Time} from {Sender} for pot {Key}: {State}", ptx.Hash, ptx.Time, ptx.Sender, pot.Key, ptx.State);
                     continue;
                 }
 
                 jettonWalletAddress = AddressConverter.ToContract(jettonWalletAddress);
-                userWalletAddres = AddressConverter.ToUser(userWalletAddres);
-
                 if (jettonWalletAddress != pot.JettonWallet)
                 {
-                    ptx.State = PotTransactionState.FakeTransfer;
+                    ptx.State = TransactionState.InvalidUnknownJetton;
                     db.Insert(ptx);
-                    logger.LogWarning("Pot {Key} tx {Hash} at {Time} is a FAKE jetton transfer (from unknown {Address}), ignored", pot.Key, ptx.Hash, ptx.Notified, jettonWalletAddress);
+                    logger.LogWarning("Ignored unknown-jetton tx {Hash} at {Time} from {Sender} for pot {Key}: {State}", ptx.Hash, ptx.Time, ptx.Sender, pot.Key, ptx.State);
                     continue;
                 }
 
-                if (forwardPayload == null || !PayloadEncoder.TryDecodeCell(forwardPayload, out var encodedPotId, out var encodedUserId, out var encodedReferrerAddress))
-                {
-                    ptx.State = PotTransactionState.ManualTransferNoPayload;
-                    db.Insert(ptx);
-                    logger.LogWarning("Pot {Key} tx {Hash} at {Time} is a MANUAL jetton transfer (without payload), ignored", pot.Key, ptx.Hash, ptx.Notified);
-                    continue;
-                }
-
-                if (encodedPotId != pot.Id)
-                {
-                    ptx.State = PotTransactionState.ManualTransferInvalidPayload;
-                    db.Insert(ptx);
-                    logger.LogWarning("Pot {Key} tx {Hash} at {Time} is a MANUAL jetton transfer (invalid payload), ignored", pot.Key, ptx.Hash, ptx.Notified);
-                    continue;
-                }
-
-                if (encodedReferrerAddress == userWalletAddres || encodedReferrerAddress == pot.Address)
-                {
-                    encodedReferrerAddress = pot.OwnerUserAddress;
-                }
-
-                ptx.State = PotTransactionState.Processing;
-                ptx.Sender = userWalletAddres;
+                ptx.IsJettonTransfer = true;
+                ptx.Sender = AddressConverter.ToUser(userWalletAddres);
                 ptx.Amount = (decimal)amount / (decimal)Math.Pow(10, jetton.Decimals);
-                ptx.UserId = encodedUserId;
-                ptx.Referrer = encodedReferrerAddress;
+
+                if (forwardPayload != null)
+                {
+                    if (!PayloadEncoder.TryDecode(forwardPayload, out var encodedOpCode, out var encodedUserId, out var encodedReferrerAddress))
+                    {
+                        ptx.State = TransactionState.InvalidBadPayload;
+                        db.Insert(ptx);
+                        logger.LogWarning("Ignored 'corrupted' jetton tx {Hash} at {Time} from {Sender} for pot {Key}: {State}", ptx.Hash, ptx.Time, ptx.Sender, pot.Key, ptx.State);
+                        continue;
+                    }
+
+                    ptx.OpCode = encodedOpCode;
+                    ptx.UserId = encodedUserId;
+                    ptx.Referrer = string.IsNullOrEmpty(encodedReferrerAddress) ? null : AddressConverter.ToUser(encodedReferrerAddress);
+
+                    // Feat: self-ref or accidental(?) pot-ref are not allowed.
+                    if (ptx.Referrer == userWalletAddres || ptx.Referrer == AddressConverter.ToUser(pot.Address))
+                    {
+                        ptx.Referrer = pot.OwnerUserAddress;
+                    }
+                }
+
                 db.Insert(ptx);
-                logger.LogInformation("Pot {Key} tx {Hash} at {Time} found new jetton transfer of {Amount} from user {Id} / {Address}, ref {RAddress}", pot.Key, ptx.Hash, ptx.Notified, ptx.Amount, ptx.UserId, ptx.Sender, ptx.Referrer);
+                logger.LogInformation("Found jetton tx {Hash} at {Time} from {Sender} for pot {Key}: {Amount} coins", ptx.Hash, ptx.Time, ptx.Sender, pot.Key, ptx.Amount);
                 found = true;
             }
 
@@ -173,9 +199,9 @@
         {
             var db = dbProvider.MainDb;
 
-            var list = db.Table<PotTransaction>()
-                .Where(x => x.PotId == pot.Id && x.State == PotTransactionState.Processing)
-                .OrderBy(x => x.Notified)
+            var list = db.Table<Transaction>()
+                .Where(x => x.PotId == pot.Id && x.State == TransactionState.Unprocessed)
+                .OrderBy(x => x.Time)
                 .ToList();
 
             if (list.Count == 0)
@@ -185,78 +211,134 @@
 
             foreach (var tx in list)
             {
-                if (pot.Charged == null)
+                if (!tx.IsJettonTransfer)
                 {
-                    if (tx.Sender != pot.OwnerUserAddress)
-                    {
-                        tx.State = PotTransactionState.BeforeCharge;
+                    tx.State = TransactionState.UnknownIgnored;
+                    db.Update(tx);
+                    continue;
+                }
+
+                switch (tx.OpCode)
+                {
+                    case TransactionOpcode.PrizeTransfer:
+                        var charged = false;
+                        if (tx.Sender != pot.OwnerUserAddress)
+                        {
+                            tx.State = TransactionState.ChargeNotFromOwner;
+                        }
+                        else if (pot.Charged != null)
+                        {
+                            tx.State = TransactionState.ChargeAlreadyDone;
+                        }
+                        else if (tx.Amount < pot.InitialSize)
+                        {
+                            tx.State = TransactionState.ChargeTooSmall;
+                        }
+                        else
+                        {
+                            tx.State = TransactionState.ChargeOk;
+                            pot.Charged = tx.Time;
+                            charged = true;
+                        }
+
+                        if (pot.Stolen == null)
+                        {
+                            pot.TotalSize += tx.Amount;
+                        }
+
                         db.Update(tx);
-                    }
-                    else if (tx.Amount < pot.InitialSize)
-                    {
-                        tx.State = PotTransactionState.TooSmallForCharge;
+                        db.Update(pot);
+
+                        if (charged)
+                        {
+                            db.Insert(ScheduledMessage.Create(pot.Id, ScheduledMessageType.ReferralRichMessage, null));
+                        }
+
+                        break;
+
+                    case TransactionOpcode.Bet:
+                        var (started, accepted, declined, stolen) = (false, false, false, false);
+                        if (pot.Charged == null)
+                        {
+                            tx.State = TransactionState.BetBeforeCharge;
+                        }
+                        else if (pot.Stolen != null)
+                        {
+                            tx.State = TransactionState.BetAfterStolen;
+                        }
+                        else if (pot.LastTx != null && pot.LastTx.Value.Add(pot.Countdown) < tx.Time)
+                        {
+                            tx.State = TransactionState.BetAfterStolen;
+                            pot.Stolen = pot.LastTx.Value.Add(pot.Countdown);
+                            stolen = true;
+                        }
+                        else if (tx.Amount < pot.TxSizeNext)
+                        {
+                            tx.State = TransactionState.BetTooSmall;
+                            declined = true;
+                        }
+                        else
+                        {
+                            tx.State = TransactionState.BetOk;
+                            accepted = true;
+
+                            if (pot.FirstTx is null)
+                            {
+                                pot.FirstTx = tx.Time;
+                                started = true;
+                            }
+
+                            if (pot.TxSizeIncrease > 0)
+                            {
+                                pot.TxSizeNext += Math.Round(pot.TxSizeNext * pot.TxSizeIncrease / 100, 2);
+                            }
+
+                            pot.LastTx = tx.Time;
+                            pot.TxCount++;
+                        }
+
+                        if (pot.Stolen == null)
+                        {
+                            pot.TotalSize += tx.Amount;
+                        }
+
                         db.Update(tx);
-                    }
-                    else
-                    {
-                        tx.State = PotTransactionState.Charge;
+                        db.Update(pot);
+
+                        if (declined && tx.UserId != null)
+                        {
+                            db.Insert(ScheduledMessage.Create(pot.Id, ScheduledMessageType.PotTransactionDeclined, tx.UserId));
+                        }
+
+                        if (accepted && tx.UserId != null)
+                        {
+                            db.Insert(ScheduledMessage.Create(pot.Id, ScheduledMessageType.PotTransactionAccepted, tx.UserId));
+                        }
+
+                        if (started)
+                        {
+                            db.Insert(ScheduledMessage.Create(pot.Id, ScheduledMessageType.PotStarted, pot.OwnerUserId));
+                        }
+
+                        break;
+
+                    default:
+                        tx.State = TransactionState.SkippedUnknown;
+
+                        if (pot.Stolen == null)
+                        {
+                            pot.TotalSize += tx.Amount;
+                        }
+
                         db.Update(tx);
+                        db.Update(pot);
 
-                        pot.Charged = tx.Notified;
-                        db.Insert(ScheduledMessage.Create(pot.Id, ScheduledMessageType.ReferralRichMessage, null));
-                    }
+                        break;
                 }
-                else if (pot.Stolen != null)
-                {
-                    tx.State = PotTransactionState.AfterStolen;
-                    db.Update(tx);
-                }
-                else if (pot.LastTx != null && pot.LastTx.Value.Add(pot.Countdown) < tx.Notified)
-                {
-                    tx.State = PotTransactionState.AfterStolen;
-                    db.Update(tx);
-
-                    pot.Stolen = pot.LastTx.Value.Add(pot.Countdown);
-                }
-                else if (tx.Amount < pot.TxSizeNext)
-                {
-                    tx.State = PotTransactionState.TooSmallForBet;
-                    db.Update(tx);
-
-                    if (tx.UserId != null)
-                    {
-                        db.Insert(ScheduledMessage.Create(pot.Id, ScheduledMessageType.PotTransactionDeclined, tx.UserId));
-                    }
-                }
-                else
-                {
-                    tx.State = PotTransactionState.Bet;
-                    db.Update(tx);
-
-                    if (tx.UserId != null)
-                    {
-                        db.Insert(ScheduledMessage.Create(pot.Id, ScheduledMessageType.PotTransactionAccepted, tx.UserId));
-                    }
-
-                    if (pot.FirstTx is null)
-                    {
-                        pot.FirstTx = tx.Notified;
-                        db.Insert(ScheduledMessage.Create(pot.Id, ScheduledMessageType.PotStarted, pot.OwnerUserId));
-                    }
-
-                    if (pot.TxSizeIncrease > 0)
-                    {
-                        pot.TxSizeNext += Math.Round(pot.TxSizeNext * pot.TxSizeIncrease / 100, 2);
-                    }
-
-                    pot.LastTx = tx.Notified;
-                    pot.TxCount++;
-                }
-
-                pot.TotalSize += tx.Amount;
-                pot.Touch();
-                db.Update(pot);
             }
+
+            pot.Touch();
+            db.Update(pot);
 
             return true;
         }

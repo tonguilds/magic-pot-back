@@ -142,7 +142,7 @@
             [Required, FromForm] NewPotModel model,
             IFormFile? coverImage)
         {
-            var(ms, animated) = await ValidateCoverImage(null, coverImage, nameof(coverImage));
+            var (ms, animated) = await ValidateCoverImage(null, coverImage, nameof(coverImage));
 
             return await CreateNewPot(initData, model, ms, animated);
         }
@@ -175,7 +175,7 @@
 
             var jetton = db.Get<Jetton>(x => x.Address == pot.JettonMaster);
             var ujw = db.Get<UserJettonWallet>(x => x.MainWallet == pot.OwnerUserAddress && x.JettonMaster == pot.JettonMaster);
-            var (txAmount, txPayload) = PrepareTxInfo(pot, jetton);
+            var (txAmount, txPayload) = PrepareTxInfo(pot, jetton, tgUser.Id);
 
             return new TonConnectTransactionInfo(ujw.JettonWallet!, txAmount, txPayload);
         }
@@ -245,7 +245,7 @@
             var user = lazyDbProvider.Value.GetOrCreateUser(tgUser);
 
             var pot = await CreatePot(model, user.Id, jetton!.Address, coverImage, coverImageAnimated);
-            var (txAmount, txPayload) = PrepareTxInfo(pot, jetton);
+            var (txAmount, txPayload) = PrepareTxInfo(pot, jetton, pot.OwnerUserId);
 
             logger.LogInformation("New Pot created: {Key} by #{UserId} / @{User} for {Amount} {Symbol}", pot.Key, user.Id, user.Username, pot.InitialSize, jetton.Symbol);
 
@@ -471,10 +471,11 @@
             return pot;
         }
 
-        protected (long Amount, string Payload) PrepareTxInfo(Pot pot, Jetton jetton)
+        protected (long Amount, string Payload) PrepareTxInfo(Pot pot, Jetton jetton, long currentUserId)
         {
             var tonAmount = TonLibDotNet.Utils.CoinUtils.Instance.ToNano(cachedData.Options.TonAmountForGas + cachedData.Options.TonAmountForInterest);
             var jettonAmount = (BigInteger)pot.InitialSize * (BigInteger)Math.Pow(10, jetton.Decimals);
+            var forwardPayload = PayloadEncoder.EncodePrize(currentUserId);
             var payload = TonLibDotNet.Recipes.Tep74Jettons.Instance.CreateTransferCell(
                 (ulong)pot.Id,
                 jettonAmount,
@@ -482,7 +483,7 @@
                 pot.OwnerUserAddress,
                 null,
                 cachedData.Options.TonAmountForInterest,
-                null);
+                forwardPayload);
 
             return (tonAmount, payload.ToBoc().SerializeToBase64());
         }

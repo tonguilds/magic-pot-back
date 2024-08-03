@@ -37,7 +37,7 @@
             MainDb.CreateTable<Jetton>();
             MainDb.CreateTable<User>();
             MainDb.CreateTable<Pot>();
-            MainDb.CreateTable<PotTransaction>();
+            MainDb.CreateTable<Transaction>();
             MainDb.CreateTable<PrecachedMnemonic>();
             MainDb.CreateTable<UserJettonWallet>();
             MainDb.CreateTable<ScheduledMessage>();

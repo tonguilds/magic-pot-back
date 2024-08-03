@@ -1,91 +1,72 @@
 ﻿namespace MagicPot.Backend.Utils
 {
-    using System.Buffers.Binary;
+    using MagicPot.Backend.Data;
     using TonLibDotNet;
     using TonLibDotNet.Cells;
 
     public static class PayloadEncoder
     {
-        private const long TransactionPayload = 0x2ab06b49d43ebd3b; // random value
+        private const byte Version1 = 0xF2;
+        private const byte Version1RandLength = 19;
+        private const int OpCodePrize = 0x26b3e995;
+        private const int OpCodeBet = 0x7a795387;
 
-        public static byte[] Encode(long potId, long userId)
-        {
-            var payloadBytes = new byte[8];
-            var potBytes = new byte[8];
-            var userBytes = new byte[8];
-            BinaryPrimitives.WriteInt64BigEndian(payloadBytes, TransactionPayload);
-            BinaryPrimitives.WriteInt64BigEndian(potBytes, potId);
-            BinaryPrimitives.WriteInt64BigEndian(userBytes, userId);
-
-            var res = new byte[24];
-            for (var i = 0; i < 8; i++)
-            {
-                res[(i * 3) + 0] = payloadBytes[i];
-                res[(i * 3) + 1] = potBytes[i];
-                res[(i * 3) + 2] = userBytes[i];
-            }
-
-            return res;
-        }
-
-        public static bool TryDecode(byte[] bytes, out long potId, out long userId)
-        {
-            potId = 0;
-            userId = 0;
-
-            if (bytes.Length != 24)
-            {
-                return false;
-            }
-
-            var payloadBytes = new[] { bytes[0], bytes[3], bytes[6], bytes[9], bytes[12], bytes[15], bytes[18], bytes[21] };
-            var payload = BinaryPrimitives.ReadInt64BigEndian(payloadBytes);
-            if (payload != TransactionPayload)
-            {
-                return false;
-            }
-
-            var potBytes = new[] { bytes[1], bytes[4], bytes[7], bytes[10], bytes[13], bytes[16], bytes[19], bytes[22] };
-            potId = BinaryPrimitives.ReadInt64BigEndian(potBytes);
-
-            var userBytes = new[] { bytes[2], bytes[5], bytes[8], bytes[11], bytes[14], bytes[17], bytes[20], bytes[23] };
-            userId = BinaryPrimitives.ReadInt64BigEndian(userBytes);
-
-            return true;
-        }
-
-        public static Cell EncodeToCell(long potId, long userId, string? referrerAddress)
+        public static Cell EncodePrize(long userId)
         {
             return new CellBuilder()
-                .StoreBytes(PayloadEncoder.Encode(potId, userId))
-                .StoreBit(false) // not used, just to break byte alignment of address value
+                .StoreByte(Version1)
+                .StoreInt(Random.Shared.Next(), Version1RandLength)
+                .StoreInt(OpCodePrize)
+                .StoreLong(userId)
+                .Build();
+        }
+
+        public static Cell EncodeBet(long userId, string? referrerAddress)
+        {
+            return new CellBuilder()
+                .StoreByte(Version1)
+                .StoreInt(Random.Shared.Next(), Version1RandLength)
+                .StoreInt(OpCodeBet)
+                .StoreLong(userId)
                 .StoreAddressIntStd2(referrerAddress)
                 .Build();
         }
 
-        public static bool TryDecodeCell(Cell cell, out long potId, out long userId, out string? referrerAddress)
+        public static bool TryDecode(Cell cell, out TransactionOpcode opcode, out long userId, out string? referrerAddress)
         {
-            potId = 0;
+            opcode = TransactionOpcode.DefaultNone;
             userId = 0;
             referrerAddress = null;
 
-            var slice = cell.BeginRead();
-
-            if (!slice.TryCanLoad(24 * 8))
-            {
-                return false;
-            }
-
-            var encodedPayload = slice.LoadBytes(24);
-            if (!TryDecode(encodedPayload, out potId, out userId))
-            {
-                return false;
-            }
-
             try
             {
-                slice.SkipBits(1);
-                referrerAddress = slice.TryLoadAddressIntStd(false, !Program.InMainnet);
+                var slice = cell.BeginRead();
+
+                if (!slice.TryCanLoad(8))
+                {
+                    return false;
+                }
+
+                var ver = slice.LoadByte();
+                if (ver != Version1)
+                {
+                    return false;
+                }
+
+                slice.SkipBits(Version1RandLength);
+                opcode = slice.LoadInt() switch
+                {
+                    OpCodePrize => TransactionOpcode.PrizeTransfer,
+                    OpCodeBet => TransactionOpcode.Bet,
+                    _ => TransactionOpcode.DefaultNone,
+                };
+
+                userId = slice.LoadLong();
+
+                if (opcode == TransactionOpcode.Bet)
+                {
+                    referrerAddress = slice.TryLoadAddressIntStd();
+                }
             }
             catch (Exception)
             {

@@ -45,7 +45,7 @@
         /// </summary>
         public List<PotParticipant>? LastParticipants { get; set; }
 
-        public static PotInfo Create(Pot pot, Jetton jetton, User user, IList<PotTransaction>? transactions, IList<User> knownUsers)
+        public static PotInfo Create(Pot pot, Jetton jetton, User user, IList<Transaction>? transactions, IList<User> knownUsers)
         {
             return new PotInfo
             {
@@ -81,7 +81,7 @@
                 LastParticipants = transactions?
                     .Select(x => new PotParticipant
                     {
-                        TxTime = x.Notified,
+                        TxTime = x.Time,
                         Address = x.Sender ?? string.Empty,
                         UserId = x.UserId ?? 0,
                         Name = knownUsers.FirstOrDefault(z => z.Id == x.UserId)?.FirstName,

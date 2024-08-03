@@ -25,7 +25,7 @@
 
         public List<User> ActivePotUsers { get; private set; } = [];
 
-        public Dictionary<long, List<PotTransaction>> ActivePotTransactions { get; private set; } = [];
+        public Dictionary<long, List<Transaction>> ActivePotTransactions { get; private set; } = [];
 
         public Task RunAsync(ITask currentTask, IServiceProvider scopeServiceProvider, CancellationToken cancellationToken)
         {
@@ -52,9 +52,9 @@
             ActivePotTransactions.Clear();
             foreach (var id in ActivePots.Values.Select(x => x.Id))
             {
-                var txList = db.Table<PotTransaction>()
-                    .Where(x => x.PotId == id && x.State == PotTransactionState.Bet)
-                    .OrderByDescending(x => x.Notified)
+                var txList = db.Table<Transaction>()
+                    .Where(x => x.PotId == id && x.State == TransactionState.BetOk)
+                    .OrderByDescending(x => x.Time)
                     .Take(10)
                     .ToList();
                 ActivePotTransactions[id] = txList;
