@@ -53,7 +53,7 @@
             }
         }
 
-        protected async Task<bool> Update(Pot pot)
+        public async Task<bool> Update(Pot pot)
         {
             var changed = await UpdatePotJettonAddress(pot);
 
@@ -78,7 +78,7 @@
             return changed;
         }
 
-        protected async Task<bool> UpdatePotJettonAddress(Pot pot)
+        public async Task<bool> UpdatePotJettonAddress(Pot pot)
         {
             if (!string.IsNullOrWhiteSpace(pot.JettonWallet))
             {
@@ -91,7 +91,7 @@
             return true;
         }
 
-        protected async Task<bool> LoadNewTransactions(Pot pot, TransactionId lastTransaction, DateTimeOffset syncTime, Jetton jetton)
+        public async Task<bool> LoadNewTransactions(Pot pot, TransactionId lastTransaction, DateTimeOffset syncTime, Jetton jetton)
         {
             var found = false;
             var db = dbProvider.MainDb;
@@ -195,7 +195,7 @@
             return found;
         }
 
-        protected bool ProcessNewTransactions(Pot pot)
+        public bool ProcessNewTransactions(Pot pot)
         {
             var db = dbProvider.MainDb;
 
@@ -343,7 +343,7 @@
             return true;
         }
 
-        protected bool CheckForStolen(Pot pot)
+        public bool CheckForStolen(Pot pot)
         {
             if (pot.Stolen == null && pot.LastTx != null && pot.LastTx.Value.Add(pot.Countdown) < DateTimeOffset.UtcNow)
             {

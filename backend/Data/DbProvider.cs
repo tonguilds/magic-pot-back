@@ -111,7 +111,7 @@
             }
         }
 
-        protected SQLiteConnection GetMainDb(BackendOptions options)
+        protected virtual SQLiteConnection GetMainDb(BackendOptions options)
         {
             var file = Path.GetFullPath(options.DatabaseFile);
             var conn = new SQLiteConnection(file);
