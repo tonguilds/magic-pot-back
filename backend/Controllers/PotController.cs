@@ -307,7 +307,7 @@
         protected (long Amount, string Payload) PrepareTxInfo(Pot pot, Jetton jetton, string userAddress, decimal amount, long currentUserId, string? referrerAddress)
         {
             var tonAmount = TonLibDotNet.Utils.CoinUtils.Instance.ToNano(cachedData.Options.TonAmountForGas + cachedData.Options.TonAmountForInterest);
-            var jettonAmount = (BigInteger)amount * (BigInteger)Math.Pow(10, jetton.Decimals);
+            var jettonAmount = (BigInteger)(amount * (decimal)Math.Pow(10, jetton.Decimals));
             var forwardPayload = PayloadEncoder.EncodeBet(currentUserId, referrerAddress);
             var payload = TonLibDotNet.Recipes.Tep74Jettons.Instance.CreateTransferCell(
                 (ulong)pot.Id,
