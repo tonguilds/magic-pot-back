@@ -139,36 +139,37 @@
                 : "https://testnet.tonscan.org/address/" + jetton.Address;
 
             var text = $@"*{MarkdownEncoder.Escape(pot.Name)}*
-Pot creator: [@{MarkdownEncoder.Escape(creator.Username ?? creator.FirstName)}](tg://user?id={pot.OwnerUserId})
-Initial pool: {MarkdownEncoder.Escape(pot.InitialSize.ToString("N0", DefaultCulture))} [{MarkdownEncoder.Escape(jetton.Symbol)}]({jettonLink})
-Countdown time: {Math.Floor(pot.Countdown.TotalHours)}h {pot.Countdown.Minutes:00}m
-Transaction cost type: {(pot.TxSizeIncrease == 0 ? "fixed" : "increasing " + pot.TxSizeIncrease + "%")}
-Who gets the prize:
+• ᴄʀᴇᴀᴛᴏʀ: [@{MarkdownEncoder.Escape(creator.Username ?? creator.FirstName)}](tg://user?id={pot.OwnerUserId})
+• ɪɴɪᴛɪᴀʟ ᴘᴏᴏʟ: {MarkdownEncoder.Escape(pot.InitialSize.ToString("N0", DefaultCulture))} [{MarkdownEncoder.Escape(jetton.Symbol)}]({jettonLink})
+• ᴄᴏᴜɴᴛᴅᴏᴡɴ: {Math.Floor(pot.Countdown.TotalHours)}`h` {pot.Countdown.Minutes:00}`m`
+• ʙᴇᴛ ᴛʏᴘᴇ: {(pot.TxSizeIncrease == 0 ? "fixed" : "increasing " + pot.TxSizeIncrease + "%")}
+
+*Who gets the prize:*
 ";
 
             if (pot.CreatorPercent > 0)
             {
-                text += $"creator {pot.CreatorPercent}%" + Environment.NewLine;
+                text += $"• ᴄʀᴇᴀᴛᴏʀ: {pot.CreatorPercent}%" + Environment.NewLine;
             }
 
             if (pot.LastTxPercent > 0)
             {
-                text += $"{pot.LastTxCount} last players {pot.LastTxPercent}%" + Environment.NewLine;
+                text += $"• {pot.LastTxCount} ʟᴀꜱᴛ ᴘʟᴀʏᴇʀꜱ: {pot.LastTxPercent}%" + Environment.NewLine;
             }
 
             if (pot.ReferrersPercent > 0)
             {
-                text += $"referrers {pot.ReferrersPercent}%" + Environment.NewLine;
+                text += $"• ʀᴇꜰᴇʀʀᴇʀꜱ: {pot.ReferrersPercent}%" + Environment.NewLine;
             }
 
             if (pot.RandomTxPercent > 0)
             {
-                text += $"{pot.RandomTxCount} random players {pot.RandomTxPercent}%" + Environment.NewLine;
+                text += $"• {pot.RandomTxCount} ʀᴀɴᴅᴏᴍ ᴘʟᴀʏᴇʀꜱ: {pot.RandomTxPercent}%" + Environment.NewLine;
             }
 
             if (pot.BurnPercent > 0)
             {
-                text += $"burn {pot.BurnPercent}%" + Environment.NewLine;
+                text += $"• ʙᴜʀɴ: {pot.BurnPercent}%" + Environment.NewLine;
             }
 
             if (string.IsNullOrEmpty(refAddress))
