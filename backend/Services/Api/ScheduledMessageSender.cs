@@ -141,7 +141,7 @@
             var text = $@"*{MarkdownEncoder.Escape(pot.Name)}*
 • ᴄʀᴇᴀᴛᴏʀ: [@{MarkdownEncoder.Escape(creator.Username ?? creator.FirstName)}](tg://user?id={pot.OwnerUserId})
 • ɪɴɪᴛɪᴀʟ ᴘᴏᴏʟ: {MarkdownEncoder.Escape(pot.InitialSize.ToString("N0", DefaultCulture))} [{MarkdownEncoder.Escape(jetton.Symbol)}]({jettonLink})
-• ᴄᴏᴜɴᴛᴅᴏᴡɴ: {Math.Floor(pot.Countdown.TotalHours)}`h` {pot.Countdown.Minutes:00}`m`
+• ᴄᴏᴜɴᴛᴅᴏᴡɴ ᴛɪᴍᴇ: {Math.Floor(pot.Countdown.TotalHours)}ʰ {pot.Countdown.Minutes:00}ᵐ
 • ʙᴇᴛ ᴛʏᴘᴇ: {(pot.TxSizeIncrease == 0 ? "fixed" : "increasing " + pot.TxSizeIncrease + "%")}
 
 *Who gets the prize:*
