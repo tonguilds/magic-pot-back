@@ -87,50 +87,6 @@
             }
         }
 
-        public bool TryParseJettonTransferNotification(
-            TonLibDotNet.Types.Raw.Message msg,
-            [NotNullWhen(true)] out string? jettonWalletAddress,
-            [NotNullWhen(true)] out long? queryId,
-            [NotNullWhen(true)] out string? userWalletAddress,
-            [NotNullWhen(true)] out BigInteger? amount,
-            out Cell? forwardPayload)
-        {
-            amount = default;
-            userWalletAddress = default;
-            queryId = default;
-            jettonWalletAddress = msg.Source.Value;
-            forwardPayload = default;
-
-            if (msg.MsgData is not DataRaw data || string.IsNullOrWhiteSpace(data.Body))
-            {
-                return false;
-            }
-
-            var slice = Boc.ParseFromBase64(data.Body).RootCells[0].BeginRead();
-
-            if (!slice.TryCanLoad(32))
-            {
-                return false;
-            }
-
-            var op = slice.LoadInt(32);
-            if (op != 0x7362d09c)
-            {
-                return false;
-            }
-
-            queryId = slice.LoadLong(64);
-            amount = slice.LoadCoinsToBigInt();
-            userWalletAddress = slice.LoadAddressIntStd();
-
-            if (slice.TryCanLoadRef())
-            {
-                forwardPayload = slice.LoadRef();
-            }
-
-            return true;
-        }
-
         public class SyncException(long syncSeqno, long lastKnownSeqno)
             : Exception($"Sync failed: seqno {syncSeqno} is less than last known {lastKnownSeqno}.")
         {

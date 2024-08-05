@@ -28,7 +28,7 @@
                 .StoreInt(Random.Shared.Next(), Version1RandLength)
                 .StoreInt(OpCodeBet)
                 .StoreLong(userId)
-                .StoreAddressIntStd2(referrerAddress)
+                .StoreAddressIntStd(referrerAddress)
                 .Build();
         }
 

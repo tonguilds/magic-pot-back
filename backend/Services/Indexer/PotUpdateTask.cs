@@ -1,9 +1,7 @@
 ﻿namespace MagicPot.Backend.Services.Indexer
 {
-    using System.Runtime.CompilerServices;
     using MagicPot.Backend.Data;
     using MagicPot.Backend.Utils;
-    using Microsoft.AspNetCore.Http.HttpResults;
     using RecurrentTasks;
     using TonLibDotNet.Types.Internal;
 
@@ -138,7 +136,7 @@
 
                 ptx.Sender = AddressConverter.ToUser(tx.InMsg.Source.Value);
 
-                if (!blockchainReader.TryParseJettonTransferNotification(tx.InMsg, out var jettonWalletAddress, out var queryId, out var userWalletAddres, out var amount, out var forwardPayload))
+                if (!TonLibDotNet.Recipes.Tep74Jettons.Instance.TryParseJettonTransferNotification(tx.InMsg, out var jettonWalletAddress, out var queryId, out var userWalletAddres, out var amount, out var forwardPayload))
                 {
                     // Keep state Unprocessed, will process later.
                     ptx.State = TransactionState.Unprocessed;
