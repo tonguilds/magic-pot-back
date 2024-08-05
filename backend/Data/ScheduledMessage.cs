@@ -18,7 +18,9 @@
 
         public string? Address { get; set; }
 
-        public static ScheduledMessage Create(long potId, ScheduledMessageType type, long? userId, string? address = null)
+        public string? TransactionHash { get; set; }
+
+        public static ScheduledMessage Create(long potId, ScheduledMessageType type, long? userId, string? address = null, string? transactionHash = null)
         {
             return new()
             {
@@ -26,6 +28,7 @@
                 Type = type,
                 UserId = userId,
                 Address = address,
+                TransactionHash = transactionHash,
             };
         }
     }

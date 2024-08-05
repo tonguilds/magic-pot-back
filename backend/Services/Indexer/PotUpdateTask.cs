@@ -305,12 +305,12 @@
 
                         if (declined && tx.UserId != null)
                         {
-                            db.Insert(ScheduledMessage.Create(pot.Id, ScheduledMessageType.PotTransactionDeclined, tx.UserId));
+                            db.Insert(ScheduledMessage.Create(pot.Id, ScheduledMessageType.PotTransactionDeclined, tx.UserId, transactionHash: tx.Hash));
                         }
 
                         if (accepted && tx.UserId != null)
                         {
-                            db.Insert(ScheduledMessage.Create(pot.Id, ScheduledMessageType.PotTransactionAccepted, tx.UserId));
+                            db.Insert(ScheduledMessage.Create(pot.Id, ScheduledMessageType.PotTransactionAccepted, tx.UserId, transactionHash: tx.Hash));
                         }
 
                         if (started)

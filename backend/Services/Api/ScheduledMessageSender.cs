@@ -86,8 +86,8 @@
             {
                 ScheduledMessageType.ReferralRichMessage => CreatePotRichMessage(pot, msg.UserId.Value, msg.Address),
                 ScheduledMessageType.PotStarted => CreatePotStartedMessage(pot, pot.OwnerUserId),
-                ScheduledMessageType.PotTransactionAccepted => CreatePotTransactionAcceptedMessage(pot, msg.UserId.Value),
-                ScheduledMessageType.PotTransactionDeclined => CreatePotTransactionDeclinedMessage(pot, msg.UserId.Value),
+                ScheduledMessageType.PotTransactionAccepted => CreatePotTransactionAcceptedMessage(pot, msg.UserId.Value, msg.TransactionHash),
+                ScheduledMessageType.PotTransactionDeclined => CreatePotTransactionDeclinedMessage(pot, msg.UserId.Value, msg.TransactionHash),
                 _ => (new object(), string.Empty),
             };
 
@@ -109,6 +109,20 @@
             }
 
             logger.LogInformation("Published info about {Event} of pot {Key} to {Id}", msg.Type, pot.Key, msg.UserId);
+        }
+
+        protected static string GetAddressLink(string address)
+        {
+            return Program.InMainnet
+                ? "https://tonscan.org/address/" + address
+                : "https://testnet.tonscan.org/address/" + address;
+        }
+
+        protected static string GetTransactionLink(string transactionHash)
+        {
+            return Program.InMainnet
+                ? "https://tonscan.org/tx/" + transactionHash
+                : "https://testnet.tonscan.org/tx/" + transactionHash;
         }
 
         protected static object CreateReplyMarkup(Pot pot, string? refAddress = null, string text = "Steal the pot")
@@ -134,9 +148,7 @@
             var creator = dbProvider.MainDb.Get<User>(pot.OwnerUserId);
             var jetton = dbProvider.MainDb.Get<Jetton>(x => x.Address == pot.JettonMaster);
 
-            var jettonLink = Program.InMainnet
-                ? "https://tonscan.org/address/" + jetton.Address
-                : "https://testnet.tonscan.org/address/" + jetton.Address;
+            var jettonLink = GetAddressLink(jetton.Address);
 
             var text = $@"*{MarkdownEncoder.Escape(pot.Name)}*
 • ᴄʀᴇᴀᴛᴏʀ: [@{MarkdownEncoder.Escape(creator.Username ?? creator.FirstName)}](tg://user?id={pot.OwnerUserId})
@@ -235,9 +247,10 @@
             return (data, "sendMessage");
         }
 
-        protected (object Data, string Path) CreatePotTransactionAcceptedMessage(Pot pot, long targetUser)
+        protected (object Data, string Path) CreatePotTransactionAcceptedMessage(Pot pot, long targetUser, string? hash)
         {
-            var text = $@"Hey\! Your transaction reached the pot *{MarkdownEncoder.Escape(pot.Name)}*\. You are now in the game, good luck\!";
+            var tx = string.IsNullOrEmpty(hash) ? "transaction" : $"[transaction]({MarkdownEncoder.Escape(GetTransactionLink(hash))})";
+            var text = $@"Hey\! Your {tx} reached the pot *{MarkdownEncoder.Escape(pot.Name)}*\. You are now in the game, good luck\!";
 
             var data = new
             {
@@ -245,14 +258,16 @@
                 text = text,
                 parse_mode = "MarkdownV2",
                 reply_markup = CreateReplyMarkup(pot),
+                link_preview_options = new { is_disabled = true },
             };
 
             return (data, "sendMessage");
         }
 
-        protected (object Data, string Path) CreatePotTransactionDeclinedMessage(Pot pot, long targetUser)
+        protected (object Data, string Path) CreatePotTransactionDeclinedMessage(Pot pot, long targetUser, string? hash)
         {
-            var text = $@"Hey\! Your transaction has reached the pot *{MarkdownEncoder.Escape(pot.Name)}* but didn't participate because someone sent the same amount slightly before you\. You can reclaim your tokens on the pot page using the ""Return failed bid"" button\.";
+            var tx = string.IsNullOrEmpty(hash) ? "transaction" : $"[transaction]({MarkdownEncoder.Escape(GetTransactionLink(hash))})";
+            var text = $@"Hey\! Your {tx} has reached the pot *{MarkdownEncoder.Escape(pot.Name)}* but didn't participate because someone sent the same amount slightly before you\. Share this in our chat so the team can help you reclaim your tokens\.";
 
             var data = new
             {
@@ -260,6 +275,7 @@
                 text = text,
                 parse_mode = "MarkdownV2",
                 reply_markup = CreateReplyMarkup(pot),
+                link_preview_options = new { is_disabled = true },
             };
 
             return (data, "sendMessage");
